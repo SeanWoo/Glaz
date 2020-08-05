@@ -1,6 +1,7 @@
 ﻿@using Microsoft.AspNetCore.Identity
-@inject SignInManager<IdentityUser> SignInManager
-@inject UserManager<IdentityUser> UserManager
+@using Glaz.Server.Entities
+@inject SignInManager<GlazAccount> SignInManager
+@inject UserManager<GlazAccount> UserManager
 
 <ul class="navbar-nav">
 @if (SignInManager.IsSignedIn(User))
