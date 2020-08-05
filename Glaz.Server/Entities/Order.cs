@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using Glaz.Server.Entities.ManyToMany;
 
 namespace Glaz.Server.Entities
 {
@@ -18,5 +20,6 @@ namespace Glaz.Server.Entities
 
         public OrderState State { get; set; }
         public GlazAccount Account { get; set; }
+        public ICollection<AttachmentToOrder> AttachmentToOrders { get; set; }
     }
 }

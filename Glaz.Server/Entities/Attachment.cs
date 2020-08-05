@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using Glaz.Server.Data.Enums;
+using Glaz.Server.Entities.ManyToMany;
 
 namespace Glaz.Server.Entities
 {
@@ -22,5 +24,7 @@ namespace Glaz.Server.Entities
         public DateTime CreatedAt { get; set; }
 
         public VuforiaDetails Details { get; set; }
+        public GlazAccount Account { get; set; }
+        public ICollection<AttachmentToOrder> AttachmentToOrders { get; set; }
     }
 }
