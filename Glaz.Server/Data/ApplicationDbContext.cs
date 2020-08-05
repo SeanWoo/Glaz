@@ -6,6 +6,7 @@ namespace Glaz.Server.Data
 {
     public class ApplicationDbContext : IdentityDbContext<GlazAccount>
     {
+        public DbSet<Attachment> Attachments { get; set; }
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
             : base(options)
         {
