@@ -31,7 +31,7 @@ namespace Glaz.Server
             services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseMySql(
                     Configuration.GetConnectionString("DefaultConnection")));
-            services.AddDefaultIdentity<Account>(options => options.SignIn.RequireConfirmedAccount = true)
+            services.AddDefaultIdentity<GlazAccount>(options => options.SignIn.RequireConfirmedAccount = true)
                 .AddEntityFrameworkStores<ApplicationDbContext>();
             services.AddControllersWithViews();
             services.AddRazorPages();

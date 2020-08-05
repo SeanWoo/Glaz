@@ -17,7 +17,7 @@ namespace Glaz.Server.Migrations
                 .HasAnnotation("ProductVersion", "3.1.6")
                 .HasAnnotation("Relational:MaxIdentifierLength", 64);
 
-            modelBuilder.Entity("Glaz.Server.Entities.Account", b =>
+            modelBuilder.Entity("Glaz.Server.Entities.GlazAccount", b =>
                 {
                     b.Property<string>("Id")
                         .HasColumnType("varchar(255) CHARACTER SET utf8mb4");
@@ -241,7 +241,7 @@ namespace Glaz.Server.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<string>", b =>
                 {
-                    b.HasOne("Glaz.Server.Entities.Account", null)
+                    b.HasOne("Glaz.Server.Entities.GlazAccount", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -250,7 +250,7 @@ namespace Glaz.Server.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<string>", b =>
                 {
-                    b.HasOne("Glaz.Server.Entities.Account", null)
+                    b.HasOne("Glaz.Server.Entities.GlazAccount", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -265,7 +265,7 @@ namespace Glaz.Server.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Glaz.Server.Entities.Account", null)
+                    b.HasOne("Glaz.Server.Entities.GlazAccount", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -274,7 +274,7 @@ namespace Glaz.Server.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<string>", b =>
                 {
-                    b.HasOne("Glaz.Server.Entities.Account", null)
+                    b.HasOne("Glaz.Server.Entities.GlazAccount", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)

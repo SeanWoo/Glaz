@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Identity;
 
 namespace Glaz.Server.Entities
 {
-    public class Account : IdentityUser
+    public class GlazAccount : IdentityUser
     {
         [MaxLength(128)]
         public string FirstName { get; set; }
