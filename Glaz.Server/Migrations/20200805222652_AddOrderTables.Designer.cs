@@ -3,14 +3,16 @@ using System;
 using Glaz.Server.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace Glaz.Server.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20200805222652_AddOrderTables")]
+    partial class AddOrderTables
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -22,9 +24,6 @@ namespace Glaz.Server.Migrations
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("char(36)");
-
-                    b.Property<string>("AccountId")
-                        .HasColumnType("varchar(255) CHARACTER SET utf8mb4");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime(6)");
@@ -41,8 +40,6 @@ namespace Glaz.Server.Migrations
                         .HasColumnType("tinyint unsigned");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("AccountId");
 
                     b.ToTable("Attachments");
                 });
@@ -126,21 +123,6 @@ namespace Glaz.Server.Migrations
                         .HasName("UserNameIndex");
 
                     b.ToTable("AspNetUsers");
-                });
-
-            modelBuilder.Entity("Glaz.Server.Entities.ManyToMany.AttachmentToOrder", b =>
-                {
-                    b.Property<Guid>("AttachmentId")
-                        .HasColumnType("char(36)");
-
-                    b.Property<Guid>("OrderId")
-                        .HasColumnType("char(36)");
-
-                    b.HasKey("AttachmentId", "OrderId");
-
-                    b.HasIndex("OrderId");
-
-                    b.ToTable("AttachmentToOrder");
                 });
 
             modelBuilder.Entity("Glaz.Server.Entities.Order", b =>
@@ -347,28 +329,6 @@ namespace Glaz.Server.Migrations
                     b.HasKey("UserId", "LoginProvider", "Name");
 
                     b.ToTable("AspNetUserTokens");
-                });
-
-            modelBuilder.Entity("Glaz.Server.Entities.Attachment", b =>
-                {
-                    b.HasOne("Glaz.Server.Entities.GlazAccount", "Account")
-                        .WithMany()
-                        .HasForeignKey("AccountId");
-                });
-
-            modelBuilder.Entity("Glaz.Server.Entities.ManyToMany.AttachmentToOrder", b =>
-                {
-                    b.HasOne("Glaz.Server.Entities.Attachment", "Attachment")
-                        .WithMany("AttachmentToOrders")
-                        .HasForeignKey("AttachmentId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Glaz.Server.Entities.Order", "Order")
-                        .WithMany("AttachmentToOrders")
-                        .HasForeignKey("OrderId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
                 });
 
             modelBuilder.Entity("Glaz.Server.Entities.Order", b =>

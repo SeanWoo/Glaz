@@ -3,14 +3,16 @@ using System;
 using Glaz.Server.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace Glaz.Server.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20200805221448_AddAttachmentsTable")]
+    partial class AddAttachmentsTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -22,9 +24,6 @@ namespace Glaz.Server.Migrations
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("char(36)");
-
-                    b.Property<string>("AccountId")
-                        .HasColumnType("varchar(255) CHARACTER SET utf8mb4");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime(6)");
@@ -41,8 +40,6 @@ namespace Glaz.Server.Migrations
                         .HasColumnType("tinyint unsigned");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("AccountId");
 
                     b.ToTable("Attachments");
                 });
@@ -126,69 +123,6 @@ namespace Glaz.Server.Migrations
                         .HasName("UserNameIndex");
 
                     b.ToTable("AspNetUsers");
-                });
-
-            modelBuilder.Entity("Glaz.Server.Entities.ManyToMany.AttachmentToOrder", b =>
-                {
-                    b.Property<Guid>("AttachmentId")
-                        .HasColumnType("char(36)");
-
-                    b.Property<Guid>("OrderId")
-                        .HasColumnType("char(36)");
-
-                    b.HasKey("AttachmentId", "OrderId");
-
-                    b.HasIndex("OrderId");
-
-                    b.ToTable("AttachmentToOrder");
-                });
-
-            modelBuilder.Entity("Glaz.Server.Entities.Order", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("char(36)");
-
-                    b.Property<string>("AccountId")
-                        .HasColumnType("varchar(255) CHARACTER SET utf8mb4");
-
-                    b.Property<string>("Comment")
-                        .HasColumnType("longtext CHARACTER SET utf8mb4");
-
-                    b.Property<string>("Label")
-                        .IsRequired()
-                        .HasColumnType("varchar(256) CHARACTER SET utf8mb4")
-                        .HasMaxLength(256);
-
-                    b.Property<string>("ModeratorComment")
-                        .HasColumnType("longtext CHARACTER SET utf8mb4");
-
-                    b.Property<Guid?>("StateId")
-                        .HasColumnType("char(36)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("AccountId");
-
-                    b.HasIndex("StateId");
-
-                    b.ToTable("Orders");
-                });
-
-            modelBuilder.Entity("Glaz.Server.Entities.OrderState", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("char(36)");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("varchar(128) CHARACTER SET utf8mb4")
-                        .HasMaxLength(128);
-
-                    b.HasKey("Id");
-
-                    b.ToTable("OrderStates");
                 });
 
             modelBuilder.Entity("Glaz.Server.Entities.VuforiaDetails", b =>
@@ -347,39 +281,6 @@ namespace Glaz.Server.Migrations
                     b.HasKey("UserId", "LoginProvider", "Name");
 
                     b.ToTable("AspNetUserTokens");
-                });
-
-            modelBuilder.Entity("Glaz.Server.Entities.Attachment", b =>
-                {
-                    b.HasOne("Glaz.Server.Entities.GlazAccount", "Account")
-                        .WithMany()
-                        .HasForeignKey("AccountId");
-                });
-
-            modelBuilder.Entity("Glaz.Server.Entities.ManyToMany.AttachmentToOrder", b =>
-                {
-                    b.HasOne("Glaz.Server.Entities.Attachment", "Attachment")
-                        .WithMany("AttachmentToOrders")
-                        .HasForeignKey("AttachmentId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Glaz.Server.Entities.Order", "Order")
-                        .WithMany("AttachmentToOrders")
-                        .HasForeignKey("OrderId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("Glaz.Server.Entities.Order", b =>
-                {
-                    b.HasOne("Glaz.Server.Entities.GlazAccount", "Account")
-                        .WithMany()
-                        .HasForeignKey("AccountId");
-
-                    b.HasOne("Glaz.Server.Entities.OrderState", "State")
-                        .WithMany()
-                        .HasForeignKey("StateId");
                 });
 
             modelBuilder.Entity("Glaz.Server.Entities.VuforiaDetails", b =>
