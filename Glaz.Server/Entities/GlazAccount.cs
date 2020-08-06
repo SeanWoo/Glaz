@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Identity;
 
@@ -18,5 +20,7 @@ namespace Glaz.Server.Entities
         public bool IsBanned { get; set; }
 
         public bool IsDeleted { get; set; }
+
+        public List<Order> Orders { get; set; }
     }
 }
