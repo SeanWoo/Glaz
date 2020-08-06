@@ -1,11 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using Glaz.Server.Entities.ManyToMany;
+using System.ComponentModel.DataAnnotations.Schema;
+using Glaz.Server.Data.Enums;
 
 namespace Glaz.Server.Entities
 {
-    public sealed class Order
+    public class Order
     {
         [Key]
         public Guid Id { get; set; }
@@ -19,7 +19,19 @@ namespace Glaz.Server.Entities
         public string ModeratorComment { get; set; }
 
         public OrderState State { get; set; }
+
+
+        #region RelationShips
+
         public GlazAccount Account { get; set; }
-        public ICollection<AttachmentToOrder> AttachmentToOrders { get; set; }
+        public VuforiaDetails Details { get; set; }
+
+        public Guid TargetId { get; set; }
+        public Attachment Target { get; set; }
+
+        public Guid ResponseFileId { get; set; }
+        public Attachment ResponseFile { get; set; }
+
+        #endregion
     }
 }

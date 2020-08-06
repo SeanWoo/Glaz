@@ -1,5 +1,4 @@
 ﻿using Glaz.Server.Entities;
-using Glaz.Server.Entities.ManyToMany;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
@@ -8,7 +7,6 @@ namespace Glaz.Server.Data
     public class ApplicationDbContext : IdentityDbContext<GlazAccount>
     {
         public DbSet<Attachment> Attachments { get; set; }
-        public DbSet<OrderState> OrderStates { get; set; }
         public DbSet<Order> Orders { get; set; }
 
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
@@ -18,18 +16,17 @@ namespace Glaz.Server.Data
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.Entity<AttachmentToOrder>()
-                .HasKey(ato => new {ato.AttachmentId, ato.OrderId});
+            modelBuilder.Entity<Order>()
+                .HasOne(o => o.Target)
+                .WithMany(a => a.TargetOrders)
+                .HasForeignKey(o => o.TargetId)
+                .OnDelete(DeleteBehavior.Restrict);
 
-            modelBuilder.Entity<AttachmentToOrder>()
-                .HasOne(ato => ato.Attachment)
-                .WithMany(a => a.AttachmentToOrders)
-                .HasForeignKey(ato => ato.AttachmentId);
-
-            modelBuilder.Entity<AttachmentToOrder>()
-                .HasOne(ato => ato.Order)
-                .WithMany(o => o.AttachmentToOrders)
-                .HasForeignKey(ato => ato.OrderId);
+            modelBuilder.Entity<Order>()
+                .HasOne(o => o.ResponseFile)
+                .WithMany(a => a.ResponseOrders)
+                .HasForeignKey(o => o.ResponseFileId)
+                .OnDelete(DeleteBehavior.Restrict);
 
             base.OnModelCreating(modelBuilder);
         }

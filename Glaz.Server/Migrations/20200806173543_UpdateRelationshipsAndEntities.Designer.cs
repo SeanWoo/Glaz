@@ -9,8 +9,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Glaz.Server.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20200805231036_AddRelationShipsToAttachments")]
-    partial class AddRelationShipsToAttachments
+    [Migration("20200806173543_UpdateRelationshipsAndEntities")]
+    partial class UpdateRelationshipsAndEntities
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -36,7 +36,8 @@ namespace Glaz.Server.Migrations
                         .HasColumnType("varchar(256) CHARACTER SET utf8mb4")
                         .HasMaxLength(256);
 
-                    b.Property<string>("Note")
+                    b.Property<string>("Path")
+                        .IsRequired()
                         .HasColumnType("longtext CHARACTER SET utf8mb4");
 
                     b.Property<byte>("Type")
@@ -130,21 +131,6 @@ namespace Glaz.Server.Migrations
                     b.ToTable("AspNetUsers");
                 });
 
-            modelBuilder.Entity("Glaz.Server.Entities.ManyToMany.AttachmentToOrder", b =>
-                {
-                    b.Property<Guid>("AttachmentId")
-                        .HasColumnType("char(36)");
-
-                    b.Property<Guid>("OrderId")
-                        .HasColumnType("char(36)");
-
-                    b.HasKey("AttachmentId", "OrderId");
-
-                    b.HasIndex("OrderId");
-
-                    b.ToTable("AttachmentToOrder");
-                });
-
             modelBuilder.Entity("Glaz.Server.Entities.Order", b =>
                 {
                     b.Property<Guid>("Id")
@@ -157,6 +143,9 @@ namespace Glaz.Server.Migrations
                     b.Property<string>("Comment")
                         .HasColumnType("longtext CHARACTER SET utf8mb4");
 
+                    b.Property<Guid?>("DetailsId")
+                        .HasColumnType("char(36)");
+
                     b.Property<string>("Label")
                         .IsRequired()
                         .HasColumnType("varchar(256) CHARACTER SET utf8mb4")
@@ -165,41 +154,32 @@ namespace Glaz.Server.Migrations
                     b.Property<string>("ModeratorComment")
                         .HasColumnType("longtext CHARACTER SET utf8mb4");
 
-                    b.Property<Guid?>("StateId")
+                    b.Property<Guid>("ResponseFileId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<int>("State")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("TargetId")
                         .HasColumnType("char(36)");
 
                     b.HasKey("Id");
 
                     b.HasIndex("AccountId");
 
-                    b.HasIndex("StateId");
+                    b.HasIndex("DetailsId");
+
+                    b.HasIndex("ResponseFileId");
+
+                    b.HasIndex("TargetId");
 
                     b.ToTable("Orders");
-                });
-
-            modelBuilder.Entity("Glaz.Server.Entities.OrderState", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("char(36)");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("varchar(128) CHARACTER SET utf8mb4")
-                        .HasMaxLength(128);
-
-                    b.HasKey("Id");
-
-                    b.ToTable("OrderStates");
                 });
 
             modelBuilder.Entity("Glaz.Server.Entities.VuforiaDetails", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("char(36)");
-
-                    b.Property<Guid>("AttachmentId")
                         .HasColumnType("char(36)");
 
                     b.Property<bool>("IsBlocked")
@@ -216,9 +196,6 @@ namespace Glaz.Server.Migrations
                         .HasColumnType("int");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("AttachmentId")
-                        .IsUnique();
 
                     b.ToTable("VuforiaDetails");
                 });
@@ -358,38 +335,26 @@ namespace Glaz.Server.Migrations
                         .HasForeignKey("AccountId");
                 });
 
-            modelBuilder.Entity("Glaz.Server.Entities.ManyToMany.AttachmentToOrder", b =>
-                {
-                    b.HasOne("Glaz.Server.Entities.Attachment", "Attachment")
-                        .WithMany("AttachmentToOrders")
-                        .HasForeignKey("AttachmentId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Glaz.Server.Entities.Order", "Order")
-                        .WithMany("AttachmentToOrders")
-                        .HasForeignKey("OrderId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
             modelBuilder.Entity("Glaz.Server.Entities.Order", b =>
                 {
                     b.HasOne("Glaz.Server.Entities.GlazAccount", "Account")
-                        .WithMany()
+                        .WithMany("Orders")
                         .HasForeignKey("AccountId");
 
-                    b.HasOne("Glaz.Server.Entities.OrderState", "State")
+                    b.HasOne("Glaz.Server.Entities.VuforiaDetails", "Details")
                         .WithMany()
-                        .HasForeignKey("StateId");
-                });
+                        .HasForeignKey("DetailsId");
 
-            modelBuilder.Entity("Glaz.Server.Entities.VuforiaDetails", b =>
-                {
-                    b.HasOne("Glaz.Server.Entities.Attachment", "Attachment")
-                        .WithOne("Details")
-                        .HasForeignKey("Glaz.Server.Entities.VuforiaDetails", "AttachmentId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                    b.HasOne("Glaz.Server.Entities.Attachment", "ResponseFile")
+                        .WithMany("ResponseOrders")
+                        .HasForeignKey("ResponseFileId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Glaz.Server.Entities.Attachment", "Target")
+                        .WithMany("TargetOrders")
+                        .HasForeignKey("TargetId")
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });
 

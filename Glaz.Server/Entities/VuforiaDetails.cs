@@ -17,9 +17,5 @@ namespace Glaz.Server.Entities
         public byte Rating { get; set; }
 
         public bool IsBlocked { get; set; }
-
-        // One-to-One Relationship
-        public Guid AttachmentId { get; set; }
-        public Attachment Attachment { get; set; }
     }
 }
