@@ -1,14 +1,9 @@
 ﻿using System;
-using System.Buffers.Text;
-using System.ComponentModel;
-using System.Diagnostics;
-using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
-using Glaz.Server.Data;
 using Glaz.Server.Data.AppSettings;
 using Glaz.Server.Data.Vuforia;
 using Glaz.Server.Data.Vuforia.Responses;
@@ -21,7 +16,6 @@ namespace Glaz.Server.Services
 {
     public sealed class VuforiaService : IVuforiaService
     {
-        private DateTimeOffset _date;
 
         private const string DefaultMd5HashOfEmptyString = "d41d8cd98f00b204e9800998ecf8427e";
         private const string BaseApiUrl = "https://vws.vuforia.com";
@@ -48,17 +42,13 @@ namespace Glaz.Server.Services
 
         private void SetAuthorizationHeader(HttpRequestMessage request)
         {
-            request.Headers.Date = _date;
-            _logger.LogWarning(_date.Ticks.ToString());
-            request.Content.Headers.ContentType = MediaTypeHeaderValue.Parse("application/json");
             string stringToSign = GetStringToSign(request);
             request.Headers.Authorization = new AuthenticationHeaderValue( "VWS", GetAuthorizationHeader(stringToSign));
         }
         private string GetStringToSign(HttpRequestMessage request)
         {
             string httpMethod = request.Method.Method.ToUpper();
-            string date = _date.UtcDateTime.ToString("R");
-            _logger.LogWarning(_date.Ticks.ToString());
+            string date = request.Headers.Date.Value.UtcDateTime.ToString("R");
             string requestPath = request.RequestUri.AbsolutePath;
 
             bool isRequestHasContentBody = request.Content != null;
@@ -94,16 +84,16 @@ namespace Glaz.Server.Services
         public async Task<string> AddTarget(TargetModel target)
         {
             string json = JsonConvert.SerializeObject(target, _camelCaseSerializerSettings);
-            _date = DateTimeOffset.UtcNow;
-            _logger.LogWarning(_date.Ticks.ToString());
             var request = new HttpRequestMessage(HttpMethod.Post, $"{BaseApiUrl}/targets")
             {
                 Content = new StringContent(json, Encoding.UTF8, "application/json"),
+                Headers =
+                {
+                    Date = DateTimeOffset.UtcNow
+                }
             };
             SetAuthorizationHeader(request);
 
-            _logger.LogInformation(request.Headers.ToString());
-            _logger.LogInformation(request.Content.Headers.ToString());
             var response = await _httpClient.SendAsync(request);
             string responseJson = await response.Content.ReadAsStringAsync();
             return JsonConvert.DeserializeObject<CreateTargetResponse>(responseJson).TargetId;
