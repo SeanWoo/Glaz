@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Logging;
+using Glaz.Server.Data.Validators;
 
 namespace Glaz.Server.Areas.Identity.Pages.Account
 {
@@ -43,15 +44,16 @@ namespace Glaz.Server.Areas.Identity.Pages.Account
 
         public class InputModel
         {
-            [Required]
-            [MinLength(3)]
+            [Required(ErrorMessage = "Поле 'Имя пользователя' не может быть пустым.")]
+            [MinLength(3, ErrorMessage = "Минимальное кол-во символов - 3")]
+            [LoginValidator]
             public string Username { get; set; }
 
-            [Required]
+            [Required(ErrorMessage = "Поле 'Пароль' не может быть пустым.")]
             [DataType(DataType.Password)]
             public string Password { get; set; }
 
-            [Display(Name = "Remember me?")]
+            [Display(Name = "Запомнить меня?")]
             public bool RememberMe { get; set; }
         }
 
@@ -80,10 +82,13 @@ namespace Glaz.Server.Areas.Identity.Pages.Account
             {
                 // This doesn't count login failures towards account lockout
                 // To enable password failures to trigger account lockout, set lockoutOnFailure: true
-                var result = await _signInManager.PasswordSignInAsync(Input.Username, Input.Password, Input.RememberMe, lockoutOnFailure: false);
+
+                var user = await _userManager.FindByNameAsync(Input.Username) ?? await _userManager.FindByEmailAsync(Input.Username);
+                if (user is null) return Page(); 
+                var result = await _signInManager.PasswordSignInAsync(user, Input.Password, Input.RememberMe, lockoutOnFailure: false);
                 if (result.Succeeded)
                 {
-                    _logger.LogInformation("User logged in.");
+                    _logger.LogInformation("Пользователь авторизовался.");
                     return LocalRedirect(returnUrl);
                 }
                 if (result.RequiresTwoFactor)
@@ -92,12 +97,12 @@ namespace Glaz.Server.Areas.Identity.Pages.Account
                 }
                 if (result.IsLockedOut)
                 {
-                    _logger.LogWarning("User account locked out.");
+                    _logger.LogWarning("Учетная запись пользователя заблокирована.");
                     return RedirectToPage("./Lockout");
                 }
                 else
                 {
-                    ModelState.AddModelError(string.Empty, "Invalid login attempt.");
+                    ModelState.AddModelError(string.Empty, "Неверная попытка входа в систему.");
                     return Page();
                 }
             }
