@@ -11,6 +11,7 @@ using Microsoft.EntityFrameworkCore;
 using Glaz.Server.Data;
 using Glaz.Server.Data.AppSettings;
 using Glaz.Server.Entities;
+using Glaz.Server.Services;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.Extensions.Configuration;
@@ -65,6 +66,9 @@ namespace Glaz.Server
 
             services.AddOptions();
             services.Configure<EmailSenderOptions>(Configuration.GetSection("EmailSender"));
+            services.Configure<VuforiaCredentials>(Configuration.GetSection("VuforiaCredentials"));
+
+            services.AddSingleton<IVuforiaService, VuforiaService>();
             services.AddSingleton<IEmailSender, EmailSender>();
         }
 
