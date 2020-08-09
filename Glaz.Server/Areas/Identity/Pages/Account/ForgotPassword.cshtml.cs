@@ -31,8 +31,8 @@ namespace Glaz.Server.Areas.Identity.Pages.Account
 
         public class InputModel
         {
-            [Required]
-            [EmailAddress]
+            [Required(ErrorMessage = "Поле 'Электронный адрес' не может быть пустым.")]
+            [EmailAddress(ErrorMessage = "Электронный адрес не верный.")]
             public string Email { get; set; }
         }
 
