@@ -1,5 +1,6 @@
 ﻿using System.Threading.Tasks;
 using Glaz.Server.Data.Vuforia;
+using Glaz.Server.Data.Vuforia.Responses;
 
 namespace Glaz.Server.Services
 {
@@ -8,5 +9,6 @@ namespace Glaz.Server.Services
         Task<string> AddTarget(TargetModel target);
         Task<bool> UpdateTarget(string targetId, TargetModel newTarget);
         Task<bool> DeleteTarget(string targetId);
+        Task<TargetRecord> GetTargetRecord(string targetId);
     }
 }

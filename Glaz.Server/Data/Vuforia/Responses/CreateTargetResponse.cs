@@ -2,7 +2,7 @@
 
 namespace Glaz.Server.Data.Vuforia.Responses
 {
-    public sealed class CreateTargetResponse : CommonResponse
+    public class CreateTargetResponse : CommonResponse
     {
         [JsonProperty("target_id")]
         public string TargetId { get; set; }

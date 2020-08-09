@@ -20,7 +20,8 @@ namespace Glaz.Server.Data.JsonConverters
                 return false;
             }
 
-            return "Success".Equals(value.ToString(), StringComparison.OrdinalIgnoreCase);
+            return "Success".Equals(value.ToString(), StringComparison.OrdinalIgnoreCase)
+                || "TargetCreated".Equals(value.ToString(), StringComparison.OrdinalIgnoreCase);
         }
 
         public override bool CanConvert(Type objectType)

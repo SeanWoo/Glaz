@@ -68,7 +68,7 @@ namespace Glaz.Server
             services.Configure<EmailSenderOptions>(Configuration.GetSection("EmailSender"));
             services.Configure<VuforiaCredentials>(Configuration.GetSection("VuforiaCredentials"));
 
-            services.AddSingleton<IVuforiaService, VuforiaService>();
+            services.AddScoped<IVuforiaService, VuforiaService>();
             services.AddSingleton<IEmailSender, EmailSender>();
         }
 

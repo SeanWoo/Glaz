@@ -8,8 +8,11 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Glaz.Server.Data;
 using Glaz.Server.Data.Enums;
+using Glaz.Server.Data.Vuforia;
+using Glaz.Server.Data.Vuforia.Responses;
 using Glaz.Server.Entities;
 using Glaz.Server.Models.Orders;
+using Glaz.Server.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -23,6 +26,7 @@ namespace Glaz.Server.Controllers
         private readonly ApplicationDbContext _context;
         private readonly UserManager<GlazAccount> _userManager;
         private readonly IWebHostEnvironment _webHostEnvironment;
+        private readonly IVuforiaService _vuforiaService;
 
         private readonly string _rootDirectory;
         private readonly string _targetsDirectory;
@@ -30,11 +34,13 @@ namespace Glaz.Server.Controllers
 
         public OrdersController(ApplicationDbContext context,
             UserManager<GlazAccount> userManager,
-            IWebHostEnvironment webHostEnvironment)
+            IWebHostEnvironment webHostEnvironment,
+            IVuforiaService vuforiaService)
         {
             _context = context;
             _userManager = userManager;
             _webHostEnvironment = webHostEnvironment;
+            _vuforiaService = vuforiaService;
 
             _rootDirectory = _webHostEnvironment.WebRootPath;
             var attachmentsDirectory = "Attachments";
@@ -91,26 +97,37 @@ namespace Glaz.Server.Controllers
         {
             if (ModelState.IsValid)
             {
-                var newOrder = new Order
-                {
-                    Id = Guid.NewGuid(),
-                    Label = orderDto.Label,
-                    Comment = orderDto.Comment,
-                    Account = await _userManager.GetUserAsync(User),
-                    State = OrderState.Verifying
-                };
-                var target = await CreateAttachment(orderDto.TargetImage, true);
-                var response = await CreateAttachment(orderDto.TargetImage, false);
-                newOrder.Target = target;
-                newOrder.ResponseFile = response;
-                _context.Add(newOrder);
-                await _context.SaveChangesAsync();
+                var order = await CreateOrderAndSaveToDatabase(orderDto);
+                // 1. Upload target to the Vuforia
+                string targetId = await UploadVuforiaTarget(order.Target);
+                // 2. Request target ratings
+                var targetDetails = await _vuforiaService.GetTargetRecord(targetId);
+                // 3. Save target ratings to the database
+                await SaveTargetRatings(order, targetDetails);
 
                 return RedirectToAction(nameof(Index));
             }
             return View(orderDto);
         }
+        private async Task<Order> CreateOrderAndSaveToDatabase(CreateOrder orderDto)
+        {
+            var newOrder = new Order
+            {
+                Id = Guid.NewGuid(),
+                Label = orderDto.Label,
+                Comment = orderDto.Comment,
+                Account = await _userManager.GetUserAsync(User),
+                State = OrderState.Verifying
+            };
+            var target = await CreateAttachment(orderDto.TargetImage, true);
+            var response = await CreateAttachment(orderDto.TargetImage, false);
+            newOrder.Target = target;
+            newOrder.ResponseFile = response;
+            _context.Add(newOrder);
+            await _context.SaveChangesAsync();
 
+            return newOrder;
+        }
         private async Task<Attachment> CreateAttachment(IFormFile file, bool isTarget = false)
         {
             var newAttachment = new Attachment
@@ -145,7 +162,6 @@ namespace Glaz.Server.Controllers
 
             return newAttachment;
         }
-
         private async Task<string> SaveTargetFile(IFormFile file, Guid id)
         {
             var path = Path.Combine(_targetsDirectory, id.ToString());
@@ -154,7 +170,6 @@ namespace Glaz.Server.Controllers
             await file.CopyToAsync(stream);
             return path;
         }
-
         private async Task<string> SaveResponseFile(IFormFile file, Guid id)
         {
             var path = Path.Combine(_responseFilesDirectory, id.ToString());
@@ -162,6 +177,34 @@ namespace Glaz.Server.Controllers
             await using var stream = new FileStream(absolutePath, FileMode.CreateNew);
             await file.CopyToAsync(stream);
             return path;
+        }
+        /// <summary>
+        /// Adds new target to Vuforia database
+        /// </summary>
+        /// <param name="target">JSON object of new target</param>
+        /// <returns>Target ID</returns>
+        private async Task<string> UploadVuforiaTarget(Attachment target)
+        {
+            var targetModel = new TargetModel
+            {
+                Name = target.Label,
+                Width = TargetModel.DefaultWidth,
+                ImageBase64 = await ReadTargetFileAsBase64(target.Id)
+            };
+            return await _vuforiaService.AddTarget(targetModel);
+        }
+        private async Task<string> ReadTargetFileAsBase64(Guid targetId)
+        {
+            string filePath = Path.Combine(_targetsDirectory, targetId.ToString());
+            string absolutePath = Path.Combine(_rootDirectory, filePath);
+            var fileBytes = await System.IO.File.ReadAllBytesAsync(absolutePath);
+            return Convert.ToBase64String(fileBytes);
+        }
+        private async Task SaveTargetRatings(Order order, TargetRecord record)
+        {
+            order.Details = new VuforiaDetails(record);
+            _context.Orders.Update(order);
+            await _context.SaveChangesAsync();
         }
 
         // GET: Orders/Edit/5
