@@ -61,6 +61,7 @@ namespace Glaz.Server
                 options.SlidingExpiration = true;
             });
 
+            services.AddLogging();
             services.AddControllersWithViews();
             services.AddRazorPages();
 

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Buffers.Text;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -11,6 +12,7 @@ using Glaz.Server.Data;
 using Glaz.Server.Data.AppSettings;
 using Glaz.Server.Data.Vuforia;
 using Glaz.Server.Data.Vuforia.Responses;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
@@ -19,6 +21,8 @@ namespace Glaz.Server.Services
 {
     public sealed class VuforiaService : IVuforiaService
     {
+        private DateTimeOffset _date;
+
         private const string DefaultMd5HashOfEmptyString = "d41d8cd98f00b204e9800998ecf8427e";
         private const string BaseApiUrl = "https://vws.vuforia.com";
 
@@ -26,8 +30,9 @@ namespace Glaz.Server.Services
 
         private readonly HttpClient _httpClient;
         private readonly VuforiaCredentials _credentials;
+        private readonly ILogger<IVuforiaService> _logger;
 
-        public VuforiaService(IOptions<VuforiaCredentials> credentials)
+        public VuforiaService(IOptions<VuforiaCredentials> credentials, ILogger<IVuforiaService> logger)
         {
             _camelCaseSerializerSettings = new JsonSerializerSettings
             {
@@ -38,25 +43,29 @@ namespace Glaz.Server.Services
             };
             _credentials = credentials.Value;
             _httpClient = new HttpClient();
+            _logger = logger;
         }
 
         private void SetAuthorizationHeader(HttpRequestMessage request)
         {
+            request.Headers.Date = _date;
+            _logger.LogWarning(_date.Ticks.ToString());
+            request.Content.Headers.ContentType = MediaTypeHeaderValue.Parse("application/json");
             string stringToSign = GetStringToSign(request);
             request.Headers.Authorization = new AuthenticationHeaderValue( "VWS", GetAuthorizationHeader(stringToSign));
         }
         private string GetStringToSign(HttpRequestMessage request)
         {
             string httpMethod = request.Method.Method.ToUpper();
-            string date = DateTime.Now.ToUniversalTime().ToString("R");
-            string requestPath = request.RequestUri.AbsoluteUri;
+            string date = _date.UtcDateTime.ToString("R");
+            _logger.LogWarning(_date.Ticks.ToString());
+            string requestPath = request.RequestUri.AbsolutePath;
 
             bool isRequestHasContentBody = request.Content != null;
-            string contentType = isRequestHasContentBody ? "application/json" : string.Empty;
+            string contentType = isRequestHasContentBody ? request.Content.Headers.ContentType.MediaType : string.Empty;
             string contentMd5 = isRequestHasContentBody
                 ? CreateMd5(request.Content.ReadAsStringAsync().Result)
                 : DefaultMd5HashOfEmptyString;
-
             return $"{httpMethod}\n{contentMd5}\n{contentType}\n{date}\n{requestPath}";
         }
         private string CreateMd5(string input)
@@ -70,9 +79,9 @@ namespace Glaz.Server.Services
             StringBuilder sb = new StringBuilder();
             foreach (var hashByte in hashBytes)
             {
-                sb.Append(hashByte.ToString("X2"));
+                sb.Append(hashByte.ToString("x2"));
             }
-            return sb.ToString().ToLower();
+            return sb.ToString();
         }
         private string GetAuthorizationHeader(string stringToSign)
         {
@@ -85,12 +94,16 @@ namespace Glaz.Server.Services
         public async Task<string> AddTarget(TargetModel target)
         {
             string json = JsonConvert.SerializeObject(target, _camelCaseSerializerSettings);
+            _date = DateTimeOffset.UtcNow;
+            _logger.LogWarning(_date.Ticks.ToString());
             var request = new HttpRequestMessage(HttpMethod.Post, $"{BaseApiUrl}/targets")
             {
-                Content = new StringContent(json, Encoding.UTF8, "application/json")
+                Content = new StringContent(json, Encoding.UTF8, "application/json"),
             };
             SetAuthorizationHeader(request);
 
+            _logger.LogInformation(request.Headers.ToString());
+            _logger.LogInformation(request.Content.Headers.ToString());
             var response = await _httpClient.SendAsync(request);
             string responseJson = await response.Content.ReadAsStringAsync();
             return JsonConvert.DeserializeObject<CreateTargetResponse>(responseJson).TargetId;
