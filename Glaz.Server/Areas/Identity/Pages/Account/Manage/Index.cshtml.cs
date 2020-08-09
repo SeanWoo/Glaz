@@ -23,8 +23,6 @@ namespace Glaz.Server.Areas.Identity.Pages.Account.Manage
             _signInManager = signInManager;
         }
 
-        public string Username { get; set; }
-
         [TempData]
         public string StatusMessage { get; set; }
 
@@ -33,21 +31,33 @@ namespace Glaz.Server.Areas.Identity.Pages.Account.Manage
 
         public class InputModel
         {
-            [Phone]
-            [Display(Name = "Phone number")]
-            public string PhoneNumber { get; set; }
+            [Display(Name = "Логин")]
+            public string Username { get; set; }
+
+            [DataType(DataType.EmailAddress)]
+            [Display(Name = "Электронный адрес")]
+            public string Email { get; set; }
+
+            [Display(Name = "Имя")]
+            public string FirstName { get; set; }
+
+            [Display(Name = "Фамилия")]
+            public string LastName { get; set; }
         }
 
         private async Task LoadAsync(GlazAccount user)
         {
             var userName = await _userManager.GetUserNameAsync(user);
-            var phoneNumber = await _userManager.GetPhoneNumberAsync(user);
-
-            Username = userName;
+            var firstName = user.FirstName;
+            var lastName = user.LastName;
+            var email = await _userManager.GetEmailAsync(user);
 
             Input = new InputModel
             {
-                PhoneNumber = phoneNumber
+                Username = userName,
+                Email = email,
+                FirstName = firstName,
+                LastName = lastName
             };
         }
 
@@ -77,19 +87,35 @@ namespace Glaz.Server.Areas.Identity.Pages.Account.Manage
                 return Page();
             }
 
-            var phoneNumber = await _userManager.GetPhoneNumberAsync(user);
-            if (Input.PhoneNumber != phoneNumber)
+            var userName = await _userManager.GetUserNameAsync(user);
+            var email = await _userManager.GetEmailAsync(user);
+            if (Input.Username != userName)
             {
-                var setPhoneResult = await _userManager.SetPhoneNumberAsync(user, Input.PhoneNumber);
-                if (!setPhoneResult.Succeeded)
+                var setResult = await _userManager.SetUserNameAsync(user, Input.Username);
+                if (!setResult.Succeeded)
                 {
-                    StatusMessage = "Unexpected error when trying to set phone number.";
+                    StatusMessage = "Unexpected error when trying to set username.";
+                    return RedirectToPage();
+                }
+            }
+            if (Input.Email != email)
+            {
+                var setResult = await _userManager.SetEmailAsync(user, Input.Email);
+                if (!setResult.Succeeded)
+                {
+                    StatusMessage = "Unexpected error when trying to set email.";
                     return RedirectToPage();
                 }
             }
 
+            if (Input.FirstName != user.FirstName || Input.LastName != user.LastName)
+            {
+                user.FirstName = Input.FirstName;
+                user.LastName = Input.LastName;
+                await _userManager.UpdateAsync(user);
+            }
             await _signInManager.RefreshSignInAsync(user);
-            StatusMessage = "Your profile has been updated";
+            StatusMessage = "Ваш профиль был обновлён";
             return RedirectToPage();
         }
     }
