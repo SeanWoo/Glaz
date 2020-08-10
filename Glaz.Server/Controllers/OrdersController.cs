@@ -61,7 +61,41 @@ namespace Glaz.Server.Controllers
         // GET: Orders
         public async Task<IActionResult> Index()
         {
-            return View(await _context.Orders.ToListAsync());
+            //var targetDetails = await _vuforiaService.GetTargetRecord(targetId);
+            //await SaveTargetRatings(order.Id, targetDetails);
+            var orders = await _context.Orders
+                .AsNoTracking()
+                .Include(order => order.Target)
+                .Include(order => order.ResponseFile)
+                .Include(order => order.Details)
+                .ToArrayAsync();
+
+            var updateTasks = new List<Task>(orders.Length);
+            foreach (var order in orders)
+            {
+                if (order.Details.TargetVersion == -1)
+                {
+                    var details = await _vuforiaService.GetTargetRecord(order.Details.TargetId);
+                    updateTasks.Add(SaveTargetRatings(order.Details.Id, details));
+                }
+            }
+
+            Task.WaitAll(updateTasks.ToArray());
+
+            return View(orders);
+        }
+        private async Task SaveTargetRatings(Guid detailsId, TargetRecord record)
+        {
+            var details = await _context.VuforiaDetails
+                .AsNoTracking()
+                .FirstOrDefaultAsync(o => o.Id == detailsId);
+            details.Rating = record.TrackingRating < 0 ? (byte)0 : (byte)record.TrackingRating;
+            if (record.TrackingRating >= 0)
+            {
+                details.TargetVersion++;
+            }
+            _context.VuforiaDetails.Update(details);
+            await _context.SaveChangesAsync();
         }
 
         // GET: Orders/Details/5
@@ -100,10 +134,7 @@ namespace Glaz.Server.Controllers
                 var order = await CreateOrderAndSaveToDatabase(orderDto);
                 // 1. Upload target to the Vuforia
                 string targetId = await UploadVuforiaTarget(order.Target);
-                // 2. Request target ratings
-                var targetDetails = await _vuforiaService.GetTargetRecord(targetId);
-                // 3. Save target ratings to the database
-                await SaveTargetRatings(order, targetDetails);
+                await SaveTargetId(order.Id, targetId);
 
                 return RedirectToAction(nameof(Index));
             }
@@ -120,7 +151,7 @@ namespace Glaz.Server.Controllers
                 State = OrderState.Verifying
             };
             var target = await CreateAttachment(orderDto.TargetImage, true);
-            var response = await CreateAttachment(orderDto.TargetImage, false);
+            var response = await CreateAttachment(orderDto.ResponseFile, false);
             newOrder.Target = target;
             newOrder.ResponseFile = response;
             _context.Add(newOrder);
@@ -164,7 +195,8 @@ namespace Glaz.Server.Controllers
         }
         private async Task<string> SaveTargetFile(IFormFile file, Guid id)
         {
-            var path = Path.Combine(_targetsDirectory, id.ToString());
+            string extension = Path.GetExtension(file.FileName);
+            var path = Path.Combine(_targetsDirectory, $"{id}{extension}");
             var absolutePath = Path.Combine(_rootDirectory, path);
             await using var stream = new FileStream(absolutePath, FileMode.CreateNew);
             await file.CopyToAsync(stream);
@@ -172,7 +204,8 @@ namespace Glaz.Server.Controllers
         }
         private async Task<string> SaveResponseFile(IFormFile file, Guid id)
         {
-            var path = Path.Combine(_responseFilesDirectory, id.ToString());
+            string extension = Path.GetExtension(file.FileName);
+            var path = Path.Combine(_responseFilesDirectory, $"{id}{extension}");
             var absolutePath = Path.Combine(_rootDirectory, path);
             await using var stream = new FileStream(absolutePath, FileMode.CreateNew);
             await file.CopyToAsync(stream);
@@ -189,21 +222,23 @@ namespace Glaz.Server.Controllers
             {
                 Name = target.Label,
                 Width = TargetModel.DefaultWidth,
-                ImageBase64 = await ReadTargetFileAsBase64(target.Id)
+                ImageBase64 = await ReadTargetFileAsBase64(target.Path)
             };
             return await _vuforiaService.AddTarget(targetModel);
         }
-        private async Task<string> ReadTargetFileAsBase64(Guid targetId)
+        private async Task<string> ReadTargetFileAsBase64(string path)
         {
-            string filePath = Path.Combine(_targetsDirectory, targetId.ToString());
-            string absolutePath = Path.Combine(_rootDirectory, filePath);
+            string absolutePath = Path.Combine(_rootDirectory, path);
             var fileBytes = await System.IO.File.ReadAllBytesAsync(absolutePath);
             return Convert.ToBase64String(fileBytes);
         }
-        private async Task SaveTargetRatings(Order order, TargetRecord record)
+        private async Task SaveTargetId(Guid orderId, string targetId)
         {
-            order.Details = new VuforiaDetails(record);
-            _context.Orders.Update(order);
+            var dbOrder = await _context.Orders.FindAsync(orderId);
+            var newDetails = new VuforiaDetails(targetId);
+            _context.VuforiaDetails.Add(newDetails);
+            dbOrder.Details = newDetails;
+            _context.Orders.Update(dbOrder);
             await _context.SaveChangesAsync();
         }
 

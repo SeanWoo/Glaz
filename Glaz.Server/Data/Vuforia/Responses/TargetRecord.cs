@@ -15,6 +15,6 @@ namespace Glaz.Server.Data.Vuforia.Responses
         public float Width { get; set; }
 
         [JsonProperty("tracking_rating")]
-        public byte TrackingRating { get; set; }
+        public int TrackingRating { get; set; }
     }
 }

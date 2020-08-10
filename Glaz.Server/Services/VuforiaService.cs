@@ -3,6 +3,7 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Security.Cryptography;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Glaz.Server.Data.AppSettings;
 using Glaz.Server.Data.Vuforia;
@@ -21,7 +22,6 @@ namespace Glaz.Server.Services
         private const string BaseApiUrl = "https://vws.vuforia.com";
 
         private readonly JsonSerializerSettings _camelCaseSerializerSettings;
-
         private readonly HttpClient _httpClient;
         private readonly VuforiaCredentials _credentials;
         private readonly ILogger<IVuforiaService> _logger;
@@ -43,7 +43,7 @@ namespace Glaz.Server.Services
         private void SetAuthorizationHeader(HttpRequestMessage request)
         {
             string stringToSign = GetStringToSign(request);
-            request.Headers.Authorization = new AuthenticationHeaderValue( "VWS", GetAuthorizationHeader(stringToSign));
+            request.Headers.Authorization = new AuthenticationHeaderValue("VWS", GetAuthorizationHeader(stringToSign));
         }
         private string GetStringToSign(HttpRequestMessage request)
         {
@@ -96,7 +96,18 @@ namespace Glaz.Server.Services
 
             var response = await _httpClient.SendAsync(request);
             string responseJson = await response.Content.ReadAsStringAsync();
-            return JsonConvert.DeserializeObject<CreateTargetResponse>(responseJson).TargetId;
+            var result = JsonConvert.DeserializeObject<CreateTargetResponse>(responseJson);
+
+            if (response.IsSuccessStatusCode)
+            {
+                _logger.LogInformation($"Successfully created new Vuforia target with ID: {result.TargetId}");
+            }
+            else
+            {
+                _logger.LogError($"Can't create target: Code: {response.StatusCode} JSON:\n{responseJson}");
+            }
+
+            return result.TargetId;
         }
 
         public async Task<bool> UpdateTarget(string targetId, TargetModel newTarget)
@@ -104,7 +115,11 @@ namespace Glaz.Server.Services
             string json = JsonConvert.SerializeObject(newTarget, _camelCaseSerializerSettings);
             var request = new HttpRequestMessage(HttpMethod.Put, $"{BaseApiUrl}/targets/{targetId}")
             {
-                Content = new StringContent(json, Encoding.UTF8, "application/json")
+                Content = new StringContent(json, Encoding.UTF8, "application/json"),
+                Headers =
+                {
+                    Date = DateTimeOffset.UtcNow
+                }
             };
             SetAuthorizationHeader(request);
 
@@ -115,7 +130,13 @@ namespace Glaz.Server.Services
 
         public async Task<bool> DeleteTarget(string targetId)
         {
-            var request = new HttpRequestMessage(HttpMethod.Delete, $"{BaseApiUrl}/targets/{targetId}");
+            var request = new HttpRequestMessage(HttpMethod.Delete, $"{BaseApiUrl}/targets/{targetId}")
+            {
+                Headers =
+                {
+                    Date = DateTimeOffset.UtcNow
+                }
+            };
             SetAuthorizationHeader(request);
 
             var response = await _httpClient.SendAsync(request);
@@ -125,12 +146,21 @@ namespace Glaz.Server.Services
 
         public async Task<TargetRecord> GetTargetRecord(string targetId)
         {
-            var request = new HttpRequestMessage(HttpMethod.Get, $"{BaseApiUrl}/targets/{targetId}");
+            _logger.LogInformation($"[{DateTime.Now.ToLongTimeString()}] Trying to get details about target {targetId}");
+            var request = new HttpRequestMessage(HttpMethod.Get, $"{BaseApiUrl}/targets/{targetId}")
+            {
+                Headers =
+                {
+                    Date = DateTimeOffset.UtcNow
+                }
+            };
             SetAuthorizationHeader(request);
 
             var response = await _httpClient.SendAsync(request);
             string responseJson = await response.Content.ReadAsStringAsync();
             return JsonConvert.DeserializeObject<GetTargetResponse>(responseJson).TargetRecord;
+
+            //_logger.LogInformation($"[{DateTime.Now.ToLongTimeString()}] Successfully got details about target {targetId}");
         }
     }
 }

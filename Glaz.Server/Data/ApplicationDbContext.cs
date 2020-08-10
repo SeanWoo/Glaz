@@ -8,6 +8,7 @@ namespace Glaz.Server.Data
     {
         public DbSet<Attachment> Attachments { get; set; }
         public DbSet<Order> Orders { get; set; }
+        public DbSet<VuforiaDetails> VuforiaDetails { get; set; }
 
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
             : base(options)
