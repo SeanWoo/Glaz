@@ -1,4 +1,5 @@
-﻿using Glaz.Server.Entities;
+﻿using Glaz.Server.Data.Enums;
+using Glaz.Server.Entities;
 using Microsoft.AspNetCore.Identity;
 
 namespace Glaz.Server.Data
@@ -13,15 +14,16 @@ namespace Glaz.Server.Data
             _roleManager = roleManager;
             _userManager = userManager;
         }
+        
         public void SeedRoles()
         {
-            CreateRoleIfNotExists("Admin");
-            CreateRoleIfNotExists("Moderator");
-            CreateRoleIfNotExists("Customer");
+            CreateRoleIfNotExists(Roles.Admin);
+            CreateRoleIfNotExists(Roles.Moderator);
+            CreateRoleIfNotExists(Roles.Customer);
         }
         private void CreateRoleIfNotExists(string roleName)
         {
-            if (!IsRoleNotExists(roleName))
+            if (IsRoleNotExists(roleName))
             {
                 CreateNewRole(roleName);
             }
@@ -37,9 +39,9 @@ namespace Glaz.Server.Data
         
         public void SeedUserAccounts()
         {
-            CreateAccountWithRoleIfNotExists("admin", "Admin");
-            CreateAccountWithRoleIfNotExists("moder", "Moderator");
-            CreateAccountWithRoleIfNotExists("user", "Customer");
+            CreateAccountWithRoleIfNotExists("admin", Roles.Admin);
+            CreateAccountWithRoleIfNotExists("moder", Roles.Moderator);
+            CreateAccountWithRoleIfNotExists("user", Roles.Customer);
         }
         private void CreateAccountWithRoleIfNotExists(string username, string role)
         {

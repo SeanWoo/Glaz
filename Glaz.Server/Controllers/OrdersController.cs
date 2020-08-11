@@ -13,10 +13,11 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using static Glaz.Server.Data.Enums.Roles;
 
 namespace Glaz.Server.Controllers
 {
-    [Authorize]
+    [Authorize(Roles = Customer)]
     public class OrdersController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -34,7 +35,7 @@ namespace Glaz.Server.Controllers
             _userManager = userManager;
 
             _rootDirectory = webHostEnvironment.WebRootPath;
-            var attachmentsDirectory = "Attachments";
+            const string attachmentsDirectory = "Attachments";
             _targetsDirectory = Path.Combine(attachmentsDirectory, "Targets");
             _responseFilesDirectory = Path.Combine(attachmentsDirectory, "ResponseFiles");
             CreateMissingDirectories(
