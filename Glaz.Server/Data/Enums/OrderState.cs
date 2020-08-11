@@ -4,6 +4,7 @@
     {
         Verifying,
         Created,
+        Edited,
         Banned,
         Deleted
     }

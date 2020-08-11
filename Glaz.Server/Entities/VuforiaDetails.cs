@@ -18,6 +18,9 @@ namespace Glaz.Server.Entities
 
         public bool IsBlocked { get; set; }
 
+        public Guid AttachmentId { get; set; }
+        public Attachment Attachment { get; set; }
+
         public VuforiaDetails()
         {
             // Required by EF
