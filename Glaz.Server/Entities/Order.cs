@@ -24,7 +24,6 @@ namespace Glaz.Server.Entities
         #region RelationShips
 
         public GlazAccount Account { get; set; }
-        public VuforiaDetails Details { get; set; }
 
         public ICollection<Attachment> Attachments { get; set; }
 

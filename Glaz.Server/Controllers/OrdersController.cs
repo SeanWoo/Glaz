@@ -3,20 +3,16 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.EntityFrameworkCore;
 using Glaz.Server.Data;
 using Glaz.Server.Data.Enums;
-using Glaz.Server.Data.Vuforia;
-using Glaz.Server.Data.Vuforia.Responses;
 using Glaz.Server.Entities;
 using Glaz.Server.Models.Orders;
-using Glaz.Server.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace Glaz.Server.Controllers
 {
@@ -24,25 +20,20 @@ namespace Glaz.Server.Controllers
     public class OrdersController : Controller
     {
         private readonly ApplicationDbContext _context;
-        private readonly UserManager<GlazAccount> _userManager;
-        private readonly IWebHostEnvironment _webHostEnvironment;
-        private readonly IVuforiaService _vuforiaService;
+        private readonly string _responseFilesDirectory;
 
         private readonly string _rootDirectory;
         private readonly string _targetsDirectory;
-        private readonly string _responseFilesDirectory;
+        private readonly UserManager<GlazAccount> _userManager;
 
         public OrdersController(ApplicationDbContext context,
             UserManager<GlazAccount> userManager,
-            IWebHostEnvironment webHostEnvironment,
-            IVuforiaService vuforiaService)
+            IWebHostEnvironment webHostEnvironment)
         {
             _context = context;
             _userManager = userManager;
-            _webHostEnvironment = webHostEnvironment;
-            _vuforiaService = vuforiaService;
 
-            _rootDirectory = _webHostEnvironment.WebRootPath;
+            _rootDirectory = webHostEnvironment.WebRootPath;
             var attachmentsDirectory = "Attachments";
             _targetsDirectory = Path.Combine(attachmentsDirectory, "Targets");
             _responseFilesDirectory = Path.Combine(attachmentsDirectory, "ResponseFiles");
@@ -50,6 +41,7 @@ namespace Glaz.Server.Controllers
                 Path.Combine(_rootDirectory, _targetsDirectory),
                 Path.Combine(_rootDirectory, _responseFilesDirectory));
         }
+
         private void CreateMissingDirectories(params string[] paths)
         {
             foreach (var path in paths)
@@ -63,27 +55,15 @@ namespace Glaz.Server.Controllers
         {
             var orders = await _context.Orders
                 .AsNoTracking()
-                .Include(order => order.Attachments)
-                .Include(order => order.Details)
-                .Where(o => o.State != OrderState.Deleted)
+                .Include(o => o.Account)
+                .Include(o => o.Attachments)
+                    .ThenInclude(a => a.VuforiaDetails)
+                .Where(o => o.State != OrderState.Deleted && o.Account.UserName == User.Identity.Name)
                 .ToArrayAsync();
 
             var clientOrders = orders.Select(order => new ClientOrder(order)).ToArray();
 
             return View(clientOrders);
-        }
-        private async Task SaveTargetRatings(Guid detailsId, TargetRecord record)
-        {
-            var details = await _context.VuforiaDetails
-                .AsNoTracking()
-                .FirstOrDefaultAsync(o => o.Id == detailsId);
-            details.Rating = record.TrackingRating < 0 ? (byte)0 : (byte)record.TrackingRating;
-            if (record.TrackingRating >= 0)
-            {
-                details.TargetVersion++;
-            }
-            _context.VuforiaDetails.Update(details);
-            await _context.SaveChangesAsync();
         }
 
         // GET: Orders/Details/5
@@ -122,8 +102,10 @@ namespace Glaz.Server.Controllers
                 await CreateOrderAndSaveToDatabase(orderDto);
                 return RedirectToAction(nameof(Index));
             }
+
             return View(orderDto);
         }
+
         private async Task CreateOrderAndSaveToDatabase(CreateOrder orderDto)
         {
             var newOrder = new Order
@@ -135,11 +117,12 @@ namespace Glaz.Server.Controllers
                 State = OrderState.Verifying
             };
             var target = await CreateAttachment(orderDto.TargetImage, true);
-            var response = await CreateAttachment(orderDto.ResponseFile, false);
-            newOrder.Attachments = new List<Attachment> { target, response };
+            var response = await CreateAttachment(orderDto.ResponseFile);
+            newOrder.Attachments = new List<Attachment> {target, response};
             _context.Add(newOrder);
             await _context.SaveChangesAsync();
         }
+
         private async Task<Attachment> CreateAttachment(IFormFile file, bool isTarget = false)
         {
             var newAttachment = new Attachment
@@ -174,53 +157,25 @@ namespace Glaz.Server.Controllers
 
             return newAttachment;
         }
+
         private async Task<string> SaveTargetFile(IFormFile file, Guid id)
         {
-            string extension = Path.GetExtension(file.FileName);
+            var extension = Path.GetExtension(file.FileName);
             var path = Path.Combine(_targetsDirectory, $"{id}{extension}");
             var absolutePath = Path.Combine(_rootDirectory, path);
             await using var stream = new FileStream(absolutePath, FileMode.CreateNew);
             await file.CopyToAsync(stream);
             return path;
         }
+
         private async Task<string> SaveResponseFile(IFormFile file, Guid id)
         {
-            string extension = Path.GetExtension(file.FileName);
+            var extension = Path.GetExtension(file.FileName);
             var path = Path.Combine(_responseFilesDirectory, $"{id}{extension}");
             var absolutePath = Path.Combine(_rootDirectory, path);
             await using var stream = new FileStream(absolutePath, FileMode.CreateNew);
             await file.CopyToAsync(stream);
             return path;
-        }
-        /// <summary>
-        /// Adds new target to Vuforia database
-        /// </summary>
-        /// <param name="target">JSON object of new target</param>
-        /// <returns>Target ID</returns>
-        private async Task<string> UploadVuforiaTarget(Attachment target)
-        {
-            var targetModel = new TargetModel
-            {
-                Name = target.Label,
-                Width = TargetModel.DefaultWidth,
-                ImageBase64 = await ReadTargetFileAsBase64(target.Path)
-            };
-            return await _vuforiaService.AddTarget(targetModel);
-        }
-        private async Task<string> ReadTargetFileAsBase64(string path)
-        {
-            string absolutePath = Path.Combine(_rootDirectory, path);
-            var fileBytes = await System.IO.File.ReadAllBytesAsync(absolutePath);
-            return Convert.ToBase64String(fileBytes);
-        }
-        private async Task SaveTargetId(Guid orderId, string targetId)
-        {
-            var dbOrder = await _context.Orders.FindAsync(orderId);
-            var newDetails = new VuforiaDetails(targetId);
-            _context.VuforiaDetails.Add(newDetails);
-            dbOrder.Details = newDetails;
-            _context.Orders.Update(dbOrder);
-            await _context.SaveChangesAsync();
         }
 
         // GET: Orders/Edit/5
@@ -236,6 +191,7 @@ namespace Glaz.Server.Controllers
             {
                 return NotFound();
             }
+
             return View(order);
         }
 
@@ -244,7 +200,8 @@ namespace Glaz.Server.Controllers
         // more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(Guid id, [Bind("Id,Label,Comment,ModeratorComment")] Order order)
+        public async Task<IActionResult> Edit(Guid id, [Bind("Id,Label,Comment,ModeratorComment")]
+            Order order)
         {
             if (id != order.Id)
             {
@@ -264,13 +221,13 @@ namespace Glaz.Server.Controllers
                     {
                         return NotFound();
                     }
-                    else
-                    {
-                        throw;
-                    }
+
+                    throw;
                 }
+
                 return RedirectToAction(nameof(Index));
             }
+
             return View(order);
         }
 
@@ -293,7 +250,8 @@ namespace Glaz.Server.Controllers
         }
 
         // POST: Orders/Delete/5
-        [HttpPost, ActionName("Delete")]
+        [HttpPost]
+        [ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(Guid id)
         {
