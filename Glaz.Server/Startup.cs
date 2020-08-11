@@ -77,8 +77,9 @@ namespace Glaz.Server
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env,
             UserManager<GlazAccount> userManager, RoleManager<IdentityRole> roleManager)
         {
-            DatabaseInitializer.SeedRoles(roleManager);
-            DatabaseInitializer.SeedUserAccounts(userManager);
+            var dbInitializer = new DatabaseInitializer(roleManager, userManager);
+            dbInitializer.SeedRoles();
+            dbInitializer.SeedUserAccounts();
 
             if (env.IsDevelopment())
             {
