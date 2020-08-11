@@ -11,6 +11,8 @@ using Microsoft.EntityFrameworkCore;
 using Glaz.Server.Data;
 using Glaz.Server.Data.AppSettings;
 using Glaz.Server.Entities;
+using Glaz.Server.Services;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -33,6 +35,7 @@ namespace Glaz.Server
             services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseMySql(
                     Configuration.GetConnectionString("DefaultConnection")));
+
             services.AddIdentity<GlazAccount, IdentityRole>(options =>
                 {
                     options.Password.RequiredLength = 8;
@@ -46,17 +49,37 @@ namespace Glaz.Server
                 })
                 .AddEntityFrameworkStores<ApplicationDbContext>()
                 .AddDefaultTokenProviders();
+
+            services.ConfigureApplicationCookie(options =>
+            {
+                options.AccessDeniedPath = "/Identity/Account/AccessDenied";
+                options.Cookie.Name = "GlazServer";
+                options.Cookie.HttpOnly = true;
+                options.ExpireTimeSpan = TimeSpan.FromMinutes(60);
+                options.LoginPath = "/Identity/Account/Login";
+                options.ReturnUrlParameter = CookieAuthenticationDefaults.ReturnUrlParameter;
+                options.SlidingExpiration = true;
+            });
+
+            services.AddLogging();
             services.AddControllersWithViews();
             services.AddRazorPages();
 
             services.AddOptions();
             services.Configure<EmailSenderOptions>(Configuration.GetSection("EmailSender"));
+            services.Configure<VuforiaCredentials>(Configuration.GetSection("VuforiaCredentials"));
+
+            services.AddScoped<IVuforiaService, VuforiaService>();
             services.AddSingleton<IEmailSender, EmailSender>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env,
+            UserManager<GlazAccount> userManager, RoleManager<IdentityRole> roleManager)
         {
+            DatabaseInitializer.SeedRoles(roleManager);
+            DatabaseInitializer.SeedUserAccounts(userManager);
+
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();

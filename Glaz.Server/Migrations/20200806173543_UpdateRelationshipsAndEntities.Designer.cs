@@ -3,14 +3,16 @@ using System;
 using Glaz.Server.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace Glaz.Server.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20200806173543_UpdateRelationshipsAndEntities")]
+    partial class UpdateRelationshipsAndEntities
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -34,15 +36,9 @@ namespace Glaz.Server.Migrations
                         .HasColumnType("varchar(256) CHARACTER SET utf8mb4")
                         .HasMaxLength(256);
 
-                    b.Property<Guid>("OrderId")
-                        .HasColumnType("char(36)");
-
                     b.Property<string>("Path")
                         .IsRequired()
                         .HasColumnType("longtext CHARACTER SET utf8mb4");
-
-                    b.Property<byte>("Platform")
-                        .HasColumnType("tinyint unsigned");
 
                     b.Property<byte>("Type")
                         .HasColumnType("tinyint unsigned");
@@ -50,8 +46,6 @@ namespace Glaz.Server.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("AccountId");
-
-                    b.HasIndex("OrderId");
 
                     b.ToTable("Attachments");
                 });
@@ -160,14 +154,24 @@ namespace Glaz.Server.Migrations
                     b.Property<string>("ModeratorComment")
                         .HasColumnType("longtext CHARACTER SET utf8mb4");
 
+                    b.Property<Guid>("ResponseFileId")
+                        .HasColumnType("char(36)");
+
                     b.Property<int>("State")
                         .HasColumnType("int");
+
+                    b.Property<Guid>("TargetId")
+                        .HasColumnType("char(36)");
 
                     b.HasKey("Id");
 
                     b.HasIndex("AccountId");
 
                     b.HasIndex("DetailsId");
+
+                    b.HasIndex("ResponseFileId");
+
+                    b.HasIndex("TargetId");
 
                     b.ToTable("Orders");
                 });
@@ -329,12 +333,6 @@ namespace Glaz.Server.Migrations
                     b.HasOne("Glaz.Server.Entities.GlazAccount", "Account")
                         .WithMany()
                         .HasForeignKey("AccountId");
-
-                    b.HasOne("Glaz.Server.Entities.Order", "Order")
-                        .WithMany("Attachments")
-                        .HasForeignKey("OrderId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
                 });
 
             modelBuilder.Entity("Glaz.Server.Entities.Order", b =>
@@ -346,6 +344,18 @@ namespace Glaz.Server.Migrations
                     b.HasOne("Glaz.Server.Entities.VuforiaDetails", "Details")
                         .WithMany()
                         .HasForeignKey("DetailsId");
+
+                    b.HasOne("Glaz.Server.Entities.Attachment", "ResponseFile")
+                        .WithMany("ResponseOrders")
+                        .HasForeignKey("ResponseFileId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Glaz.Server.Entities.Attachment", "Target")
+                        .WithMany("TargetOrders")
+                        .HasForeignKey("TargetId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
