@@ -1,6 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 using Glaz.Server.Data.Enums;
 
 namespace Glaz.Server.Entities
@@ -26,11 +26,7 @@ namespace Glaz.Server.Entities
         public GlazAccount Account { get; set; }
         public VuforiaDetails Details { get; set; }
 
-        public Guid TargetId { get; set; }
-        public Attachment Target { get; set; }
-
-        public Guid ResponseFileId { get; set; }
-        public Attachment ResponseFile { get; set; }
+        public ICollection<Attachment> Attachments { get; set; }
 
         #endregion
     }

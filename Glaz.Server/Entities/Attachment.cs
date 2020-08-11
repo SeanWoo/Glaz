@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using Glaz.Server.Data.Enums;
 
@@ -13,6 +12,8 @@ namespace Glaz.Server.Entities
         [Required]
         public AttachmentType Type { get; set; }
 
+        public AttachmentType Platform { get; set; }
+
         [Required]
         [MaxLength(256)]
         public string Label { get; set; }
@@ -25,7 +26,7 @@ namespace Glaz.Server.Entities
 
         public GlazAccount Account { get; set; }
 
-        public List<Order> TargetOrders { get; set; }
-        public List<Order> ResponseOrders { get; set; }
+        public Guid OrderId { get; set; }
+        public Order Order { get; set; }
     }
 }

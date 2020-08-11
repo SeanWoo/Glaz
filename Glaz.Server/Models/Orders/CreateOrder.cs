@@ -19,7 +19,7 @@ namespace Glaz.Server.Models.Orders
         public IFormFile TargetImage { get; set; }
 
         [Required]
-        [Display(Name = "Response file on the trigger")]
+        [Display(Name = "Response file")]
         public IFormFile ResponseFile { get; set; }
     }
 }

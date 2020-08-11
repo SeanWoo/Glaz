@@ -61,28 +61,16 @@ namespace Glaz.Server.Controllers
         // GET: Orders
         public async Task<IActionResult> Index()
         {
-            //var targetDetails = await _vuforiaService.GetTargetRecord(targetId);
-            //await SaveTargetRatings(order.Id, targetDetails);
             var orders = await _context.Orders
                 .AsNoTracking()
-                .Include(order => order.Target)
-                .Include(order => order.ResponseFile)
+                .Include(order => order.Attachments)
                 .Include(order => order.Details)
+                .Where(o => o.State != OrderState.Deleted)
                 .ToArrayAsync();
 
-            var updateTasks = new List<Task>(orders.Length);
-            foreach (var order in orders)
-            {
-                if (order.Details.TargetVersion == -1)
-                {
-                    var details = await _vuforiaService.GetTargetRecord(order.Details.TargetId);
-                    updateTasks.Add(SaveTargetRatings(order.Details.Id, details));
-                }
-            }
+            var clientOrders = orders.Select(order => new ClientOrder(order)).ToArray();
 
-            Task.WaitAll(updateTasks.ToArray());
-
-            return View(orders);
+            return View(clientOrders);
         }
         private async Task SaveTargetRatings(Guid detailsId, TargetRecord record)
         {
@@ -131,16 +119,12 @@ namespace Glaz.Server.Controllers
         {
             if (ModelState.IsValid)
             {
-                var order = await CreateOrderAndSaveToDatabase(orderDto);
-                // 1. Upload target to the Vuforia
-                string targetId = await UploadVuforiaTarget(order.Target);
-                await SaveTargetId(order.Id, targetId);
-
+                await CreateOrderAndSaveToDatabase(orderDto);
                 return RedirectToAction(nameof(Index));
             }
             return View(orderDto);
         }
-        private async Task<Order> CreateOrderAndSaveToDatabase(CreateOrder orderDto)
+        private async Task CreateOrderAndSaveToDatabase(CreateOrder orderDto)
         {
             var newOrder = new Order
             {
@@ -152,12 +136,9 @@ namespace Glaz.Server.Controllers
             };
             var target = await CreateAttachment(orderDto.TargetImage, true);
             var response = await CreateAttachment(orderDto.ResponseFile, false);
-            newOrder.Target = target;
-            newOrder.ResponseFile = response;
+            newOrder.Attachments = new List<Attachment> { target, response };
             _context.Add(newOrder);
             await _context.SaveChangesAsync();
-
-            return newOrder;
         }
         private async Task<Attachment> CreateAttachment(IFormFile file, bool isTarget = false)
         {
@@ -188,7 +169,7 @@ namespace Glaz.Server.Controllers
                     ".txt" => AttachmentType.UI,
                     _ => AttachmentType.None
                 };
-                newAttachment.Label = $"response_{newAttachment.Id}";
+                newAttachment.Label = $"client_{newAttachment.Id}";
             }
 
             return newAttachment;

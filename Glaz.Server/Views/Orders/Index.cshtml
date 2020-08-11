@@ -1,4 +1,4 @@
-﻿@model IEnumerable<Glaz.Server.Entities.Order>
+﻿@model IEnumerable<Glaz.Server.Models.Orders.ClientOrder>
 
 @{
     ViewData["Title"] = "Index";
@@ -25,9 +25,6 @@
                 Target image
             </th>
             <th>
-                Target rating
-            </th>
-            <th>
                 Response file
             </th>
             <th></th>
@@ -44,20 +41,10 @@
                     @Html.DisplayFor(modelItem => item.Comment)
                 </td>
                 <td>
-                    <img width="100" height="100" src="@item.Target.Path"/>
+                    <img width="100" height="100" src="@item.TargetImagePath"/>
                 </td>
                 <td>
-                    @if (item.Details.TargetVersion == -1)
-                    {
-                        <span>Processing</span>
-                    }
-                    else
-                    {
-                        <span>@item.Details.Rating</span>
-                    }
-                </td>
-                <td>
-                    <a href="@item.ResponseFile.Path">Скачать</a>
+                    <a href="@item.ResponseFilePath">Скачать</a>
                 </td>
                 <td>
                     <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
