@@ -1,0 +1,66 @@
+﻿@model Glaz.Server.Entities.Order
+@{
+    ViewData["Title"] = "ViewOrder";
+}
+
+<h1>Заказ</h1>
+
+<div class="row">
+    <div class="col-md-8">
+        <h3>@Html.DisplayNameFor(model => model.Label)</h3>
+        <h5> - @Model.Label</h5>
+        <h3>@Html.DisplayNameFor(model => model.Comment)</h3>
+        <h5> - @Model.Comment</h5>
+        <h3>@Html.DisplayNameFor(model => model.ModeratorComment)</h3>
+        <h5 - >@Model.ModeratorComment</h5>
+        <h3>@Html.DisplayNameFor(model => model.State)</h3>
+        <h5> - @Model.State.GetDisplayName()</h5>
+        <br />
+        <h5>Вложения</h5>
+
+        @if (Model.Attachments != null && Model.Attachments.Any())
+        {
+    <table>
+        <thead>
+            <tr>
+                <th>
+                    Дата создания
+                </th>
+                <th>
+                    Пометка
+                </th>
+                <th>
+                    Тип
+                </th>
+                <th>
+                    Платформа
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model.Attachments)
+            {
+            <tr>
+                <td>
+                    @item.CreatedAt.ToString()
+                </td>
+                <td>
+                    @item.Label
+                </td>
+                <td>
+                    @item.Type
+                </td>
+                <td>
+                    @item.Platform
+                </td>
+            </tr>
+            }
+        </tbody>
+    </table>
+        }
+        else
+        {
+            <h5>Вложения отсутсвуют</h5>
+        }
+    </div>
+</div>

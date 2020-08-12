@@ -1,11 +1,19 @@
-﻿namespace Glaz.Server.Data.Enums
+﻿using System;
+using System.ComponentModel.DataAnnotations;
+
+namespace Glaz.Server.Data.Enums
 {
     public enum OrderState
     {
+        [Display(Name = "На проверке")]
         Verifying,
+        [Display(Name = "Опубликован")]
         Created,
+        [Display(Name = "На изменении")]
         Edited,
+        [Display(Name = "Забанен")]
         Banned,
+        [Display(Name = "Удален")]
         Deleted
     }
 }

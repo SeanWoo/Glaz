@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Glaz.Server.Models.Orders
 {
-    public sealed class ClientOrder
+    public class ClientOrder
     {
         [HiddenInput]
         public Guid Id { get; set; }
@@ -31,6 +31,7 @@ namespace Glaz.Server.Models.Orders
         [HiddenInput]
         public OrderState StateValue { get; set; }
 
+        public ClientOrder() { }
         public ClientOrder(Order order)
         {
             Id = order.Id;
