@@ -1,54 +1,72 @@
-﻿using Glaz.Server.Entities;
+﻿using Glaz.Server.Data.Enums;
+using Glaz.Server.Entities;
 using Microsoft.AspNetCore.Identity;
 
 namespace Glaz.Server.Data
 {
-    public static class DatabaseInitializer
+    public sealed class DatabaseInitializer
     {
-        public static void SeedRoles(RoleManager<IdentityRole> roleManager)
+        private readonly RoleManager<IdentityRole> _roleManager;
+        private readonly UserManager<GlazAccount> _userManager;
+        
+        public DatabaseInitializer(RoleManager<IdentityRole> roleManager, UserManager<GlazAccount> userManager)
         {
-            if (roleManager.FindByNameAsync("Admin").Result is null)
+            _roleManager = roleManager;
+            _userManager = userManager;
+        }
+        
+        public void SeedRoles()
+        {
+            CreateRoleIfNotExists(Roles.Admin);
+            CreateRoleIfNotExists(Roles.Moderator);
+            CreateRoleIfNotExists(Roles.Customer);
+        }
+        private void CreateRoleIfNotExists(string roleName)
+        {
+            if (IsRoleNotExists(roleName))
             {
-                roleManager.CreateAsync(new IdentityRole("Admin")).Wait();
-            }
-
-            if (roleManager.FindByNameAsync("Moderator").Result is null)
-            {
-                roleManager.CreateAsync(new IdentityRole("Moderator")).Wait();
+                CreateNewRole(roleName);
             }
         }
-        public static void SeedUserAccounts(UserManager<GlazAccount> userManager)
+        private bool IsRoleNotExists(string roleName)
         {
-            if (userManager.FindByEmailAsync("admin@glaz.ru").Result is null)
+            return _roleManager.FindByNameAsync(roleName).Result is null;
+        }
+        private void CreateNewRole(string roleName)
+        {
+            _roleManager.CreateAsync(new IdentityRole(roleName)).Wait();
+        }
+        
+        public void SeedUserAccounts()
+        {
+            CreateAccountWithRoleIfNotExists("admin", Roles.Admin);
+            CreateAccountWithRoleIfNotExists("moder", Roles.Moderator);
+            CreateAccountWithRoleIfNotExists("user", Roles.Customer);
+        }
+        private void CreateAccountWithRoleIfNotExists(string username, string role)
+        {
+            if (IsAccountNotExistsByUsername(username))
             {
-                var user = new GlazAccount
-                {
-                    UserName = "admin",
-                    Email = "admin@glaz.ru",
-                    EmailConfirmed = true
-                };
-
-                var result = userManager.CreateAsync(user, "123456789").Result;
-                if (result.Succeeded)
-                {
-                    userManager.AddToRoleAsync(user, "Admin").Wait();
-                }
+                CreateAccountWithRole(username, role);
             }
-
-            if (userManager.FindByEmailAsync("moderator@glaz.ru").Result is null)
+        }
+        private bool IsAccountNotExistsByUsername(string username)
+        {
+            return _userManager.FindByNameAsync(username).Result is null;
+        }
+        private void CreateAccountWithRole(string username, string role)
+        {
+            var user = new GlazAccount
             {
-                var user = new GlazAccount
-                {
-                    UserName = "moderator",
-                    Email = "moderator@glaz.ru",
-                    EmailConfirmed = true
-                };
+                UserName = username,
+                Email = $"{username}@glaz.ru",
+                EmailConfirmed = true
+            };
 
-                var result = userManager.CreateAsync(user, "123456789").Result;
-                if (result.Succeeded)
-                {
-                    userManager.AddToRoleAsync(user, "Moderator").Wait();
-                }
+            var result = _userManager.CreateAsync(user, "123456789").Result;
+            if (result.Succeeded)
+            {
+                _userManager.AddToRoleAsync(user, role).Wait();
             }
         }
     }

@@ -1,12 +1,8 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using System.IO;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Identity.UI;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.EntityFrameworkCore;
 using Glaz.Server.Data;
 using Glaz.Server.Data.AppSettings;
@@ -77,8 +73,11 @@ namespace Glaz.Server
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env,
             UserManager<GlazAccount> userManager, RoleManager<IdentityRole> roleManager)
         {
-            DatabaseInitializer.SeedRoles(roleManager);
-            DatabaseInitializer.SeedUserAccounts(userManager);
+            var dbInitializer = new DatabaseInitializer(roleManager, userManager);
+            dbInitializer.SeedRoles();
+            dbInitializer.SeedUserAccounts();
+
+            CreateServerDirectoriesIfNotExist(env);
 
             if (env.IsDevelopment())
             {
@@ -106,6 +105,23 @@ namespace Glaz.Server
                     pattern: "{controller=Home}/{action=Index}/{id?}");
                 endpoints.MapRazorPages();
             });
+        }
+        private void CreateServerDirectoriesIfNotExist(IWebHostEnvironment env)
+        {
+            var rootDirectory = env.WebRootPath;
+            const string attachmentsDirectory = "Attachments";
+            var targetsDirectory = Path.Combine(attachmentsDirectory, "Targets");
+            var responseFilesDirectory = Path.Combine(attachmentsDirectory, "ResponseFiles");
+            CreateDirectories(
+                Path.Combine(rootDirectory, targetsDirectory),
+                Path.Combine(rootDirectory, responseFilesDirectory));
+        }
+        private void CreateDirectories(params string[] paths)
+        {
+            foreach (var path in paths)
+            {
+                Directory.CreateDirectory(path);
+            }
         }
     }
 }
