@@ -16,17 +16,20 @@ namespace Glaz.Server.Models.Orders
         [Display(Name = "Название")]
         public string Label { get; set; }
 
-        [Display(Name = "Комментарий")]
+        [Display(Name = "Пожелания к заказу")]
         public string Comment { get; set; }
 
         [Display(Name = "Изображение-цель")]
         public string TargetImagePath { get; set; }
 
-        [Display(Name = "Файл заказчика")]
+        [Display(Name = "Файл для ответа")]
         public string ResponseFilePath { get; set; }
 
         [Display(Name = "Статус")]
         public string State { get; set; }
+        
+        [HiddenInput]
+        public OrderState StateValue { get; set; }
 
         public ClientOrder(Order order)
         {
@@ -37,14 +40,16 @@ namespace Glaz.Server.Models.Orders
                 .First(a => a.Type == AttachmentType.Target)
                 .Path;
             ResponseFilePath = order.Attachments
-                .First(a => a.Type == AttachmentType.Archive)
+                .First(a => a.Type != AttachmentType.Target && a.Platform == AttachmentPlatform.None)
                 .Path;
+            StateValue = order.State;
             State = order.State switch
             {
                 OrderState.Deleted => "Удален",
                 OrderState.Banned => "Забанен",
                 OrderState.Verifying => "На проверке",
                 OrderState.Created => "Опубликован",
+                OrderState.Edited => "Отредактирован",
                 _ => throw new InvalidEnumArgumentException("Got unexpected Order.State during creating ClientOrder object")
             };
         }

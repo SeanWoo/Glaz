@@ -21,11 +21,11 @@ namespace Glaz.Server.Controllers
     public class OrdersController : Controller
     {
         private readonly ApplicationDbContext _context;
-        private readonly string _responseFilesDirectory;
-
+        private readonly UserManager<GlazAccount> _userManager;
+        
         private readonly string _rootDirectory;
         private readonly string _targetsDirectory;
-        private readonly UserManager<GlazAccount> _userManager;
+        private readonly string _responseFilesDirectory;
 
         public OrdersController(ApplicationDbContext context,
             UserManager<GlazAccount> userManager,
@@ -38,17 +38,6 @@ namespace Glaz.Server.Controllers
             const string attachmentsDirectory = "Attachments";
             _targetsDirectory = Path.Combine(attachmentsDirectory, "Targets");
             _responseFilesDirectory = Path.Combine(attachmentsDirectory, "ResponseFiles");
-            CreateMissingDirectories(
-                Path.Combine(_rootDirectory, _targetsDirectory),
-                Path.Combine(_rootDirectory, _responseFilesDirectory));
-        }
-
-        private void CreateMissingDirectories(params string[] paths)
-        {
-            foreach (var path in paths)
-            {
-                Directory.CreateDirectory(path);
-            }
         }
 
         // GET: Orders
@@ -67,7 +56,7 @@ namespace Glaz.Server.Controllers
             return View(clientOrders);
         }
 
-        // GET: Orders/Details/5
+        // GET: Orders/Details/{id}
         public async Task<IActionResult> Details(Guid? id)
         {
             if (id == null)
@@ -76,13 +65,16 @@ namespace Glaz.Server.Controllers
             }
 
             var order = await _context.Orders
+                .Include(o => o.Attachments)
+                    .ThenInclude(a => a.VuforiaDetails)
+                .Include(o => o.Account)
                 .FirstOrDefaultAsync(m => m.Id == id);
             if (order == null)
             {
                 return NotFound();
             }
 
-            return View(order);
+            return View(new DetailsOrder(order));
         }
 
         // GET: Orders/Create
@@ -98,15 +90,14 @@ namespace Glaz.Server.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(CreateOrder orderDto)
         {
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
-                await CreateOrderAndSaveToDatabase(orderDto);
-                return RedirectToAction(nameof(Index));
+                return View(orderDto);
             }
 
-            return View(orderDto);
+            await CreateOrderAndSaveToDatabase(orderDto);
+            return RedirectToAction(nameof(Index));
         }
-
         private async Task CreateOrderAndSaveToDatabase(CreateOrder orderDto)
         {
             var newOrder = new Order
@@ -123,7 +114,6 @@ namespace Glaz.Server.Controllers
             _context.Add(newOrder);
             await _context.SaveChangesAsync();
         }
-
         private async Task<Attachment> CreateAttachment(IFormFile file, bool isTarget = false)
         {
             var newAttachment = new Attachment
@@ -158,7 +148,6 @@ namespace Glaz.Server.Controllers
 
             return newAttachment;
         }
-
         private async Task<string> SaveTargetFile(IFormFile file, Guid id)
         {
             var extension = Path.GetExtension(file.FileName);
@@ -168,7 +157,6 @@ namespace Glaz.Server.Controllers
             await file.CopyToAsync(stream);
             return path;
         }
-
         private async Task<string> SaveResponseFile(IFormFile file, Guid id)
         {
             var extension = Path.GetExtension(file.FileName);
@@ -179,7 +167,7 @@ namespace Glaz.Server.Controllers
             return path;
         }
 
-        // GET: Orders/Edit/5
+        // GET: Orders/Edit/{id}
         public async Task<IActionResult> Edit(Guid? id)
         {
             if (id == null)
@@ -187,13 +175,15 @@ namespace Glaz.Server.Controllers
                 return NotFound();
             }
 
-            var order = await _context.Orders.FindAsync(id);
+            var order = await _context.Orders
+                .Include(o => o.Attachments)
+                .FirstOrDefaultAsync(o => o.Id == id);
             if (order == null)
             {
                 return NotFound();
             }
-
-            return View(order);
+            
+            return View(new EditOrder(order, _rootDirectory));
         }
 
         // POST: Orders/Edit/5
@@ -201,35 +191,79 @@ namespace Glaz.Server.Controllers
         // more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(Guid id, [Bind("Id,Label,Comment,ModeratorComment")]
-            Order order)
+        public async Task<IActionResult> Edit(Guid id, EditOrder orderDto)
         {
-            if (id != order.Id)
+            if (id != orderDto.Id)
             {
                 return NotFound();
             }
 
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
-                try
-                {
-                    _context.Update(order);
-                    await _context.SaveChangesAsync();
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!OrderExists(order.Id))
-                    {
-                        return NotFound();
-                    }
-
-                    throw;
-                }
-
-                return RedirectToAction(nameof(Index));
+                return View(orderDto);
             }
 
-            return View(order);
+            try
+            {
+                var oldOrder = await _context.Orders
+                    .Include(o => o.Attachments)
+                    .Include(o => o.Account)
+                    .FirstOrDefaultAsync(o => o.Account.UserName == User.Identity.Name && o.Id == id);
+                await EditOrderAndSaveToDatabase(oldOrder, orderDto);
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!OrderExists(orderDto.Id))
+                {
+                    return NotFound();
+                }
+
+                throw;
+            }
+
+            return RedirectToAction(nameof(Index));
+
+        }
+        private async Task EditOrderAndSaveToDatabase(Order order, EditOrder orderDto)
+        {
+            order.Label = orderDto.Label;
+            order.Comment = orderDto.Comment;
+            order.State = OrderState.Verifying;
+            _context.Orders.Update(order);
+
+            if (orderDto.TargetImage != null)
+            {
+                var target = await CreateAttachment(orderDto.TargetImage, true);
+                await UpdateTargetAttachment(order.Id, target);
+            }
+
+            if (orderDto.ResponseFile != null)
+            {
+                var response = await CreateAttachment(orderDto.ResponseFile);
+                await UpdateResponseAttachment(order.Id, response);
+            }
+            
+            await _context.SaveChangesAsync();
+        }
+        private async Task UpdateTargetAttachment(Guid orderId, Attachment newTarget)
+        {
+            var target = await _context.Attachments
+                .FirstAsync(a => a.OrderId == orderId && a.Type == AttachmentType.Target);
+            target.Label = newTarget.Label;
+            target.CreatedAt = DateTime.Now;
+            target.Path = newTarget.Path;
+            _context.Attachments.Update(target);
+            // await _context.SaveChangesAsync();
+        }
+        private async Task UpdateResponseAttachment(Guid orderId, Attachment newResponse)
+        {
+            var response = await _context.Attachments
+                .FirstAsync(a => a.OrderId == orderId && a.Type == AttachmentType.Archive);
+            response.Label = newResponse.Label;
+            response.CreatedAt = DateTime.Now;
+            response.Path = newResponse.Path;
+            _context.Attachments.Update(response);
+            // await _context.SaveChangesAsync();
         }
 
         // GET: Orders/Delete/5
@@ -241,13 +275,14 @@ namespace Glaz.Server.Controllers
             }
 
             var order = await _context.Orders
+                .Include(o => o.Attachments)
                 .FirstOrDefaultAsync(m => m.Id == id);
             if (order == null)
             {
                 return NotFound();
             }
 
-            return View(order);
+            return View(new DeleteOrder(order));
         }
 
         // POST: Orders/Delete/5
@@ -257,7 +292,8 @@ namespace Glaz.Server.Controllers
         public async Task<IActionResult> DeleteConfirmed(Guid id)
         {
             var order = await _context.Orders.FindAsync(id);
-            _context.Orders.Remove(order);
+            order.State = OrderState.Deleted;
+            _context.Orders.Update(order);
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }

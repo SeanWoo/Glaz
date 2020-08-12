@@ -12,7 +12,7 @@ namespace Glaz.Server.Entities
         [Required]
         public AttachmentType Type { get; set; }
 
-        public AttachmentType Platform { get; set; }
+        public AttachmentPlatform Platform { get; set; }
 
         [Required]
         [MaxLength(256)]
