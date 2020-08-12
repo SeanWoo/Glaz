@@ -46,25 +46,25 @@ namespace Glaz.Server.Areas.Identity.Pages.Account
 
         public class InputModel
         {
-            [Required]
+            [Required(ErrorMessage = "Поле 'Имя пользователя' не может быть пустым.")]
             [MinLength(3)]
-            [Display(Name = "Username")]
+            [Display(Name = "Имя пользователя")]
             public string Username { get; set; }
 
-            [Required]
-            [EmailAddress]
-            [Display(Name = "Email")]
+            [Required(ErrorMessage = "Поле 'Электронный адрес' не может быть пустым.")]
+            [EmailAddress(ErrorMessage = "Ваш электронный адрес не верный.")]
+            [Display(Name = "Эл. адрес")]
             public string Email { get; set; }
 
-            [Required]
-            [StringLength(100, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 6)]
+            [Required(ErrorMessage = "Поле 'Пароль' не может быть пустым.")]
+            [StringLength(100, ErrorMessage = "{0} должен содержать не менее {2} и не более {1} символов.", MinimumLength = 6)]
             [DataType(DataType.Password)]
-            [Display(Name = "Password")]
+            [Display(Name = "Пароль")]
             public string Password { get; set; }
 
             [DataType(DataType.Password)]
-            [Display(Name = "Confirm password")]
-            [Compare("Password", ErrorMessage = "The password and confirmation password do not match.")]
+            [Display(Name = "Подтвердите пароль")]
+            [Compare("Password", ErrorMessage = "Пароль и пароль подтверждения не совпадают.")]
             public string ConfirmPassword { get; set; }
         }
 
@@ -84,7 +84,7 @@ namespace Glaz.Server.Areas.Identity.Pages.Account
                 var result = await _userManager.CreateAsync(user, Input.Password);
                 if (result.Succeeded)
                 {
-                    _logger.LogInformation("User created a new account with password.");
+                    _logger.LogInformation("Пользователь создал новую учетную запись с паролем.");
                     await _userManager.AddToRoleAsync(user, Roles.Customer);
 
                     var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);

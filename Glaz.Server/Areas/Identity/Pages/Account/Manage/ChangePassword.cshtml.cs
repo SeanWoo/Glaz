@@ -2,12 +2,17 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
+using System.Text;
+using System.Text.Encodings.Web;
 using System.Threading.Tasks;
 using Glaz.Server.Entities;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Logging;
+
 namespace Glaz.Server.Areas.Identity.Pages.Account.Manage
 {
     public class ChangePasswordModel : PageModel
@@ -15,15 +20,18 @@ namespace Glaz.Server.Areas.Identity.Pages.Account.Manage
         private readonly UserManager<GlazAccount> _userManager;
         private readonly SignInManager<GlazAccount> _signInManager;
         private readonly ILogger<ChangePasswordModel> _logger;
+        private readonly IEmailSender _emailSender;
 
         public ChangePasswordModel(
             UserManager<GlazAccount> userManager,
             SignInManager<GlazAccount> signInManager,
-            ILogger<ChangePasswordModel> logger)
+            ILogger<ChangePasswordModel> logger,
+            IEmailSender emailSender)
         {
             _userManager = userManager;
             _signInManager = signInManager;
             _logger = logger;
+            _emailSender = emailSender;
         }
 
         [BindProperty]
@@ -36,19 +44,8 @@ namespace Glaz.Server.Areas.Identity.Pages.Account.Manage
         {
             [Required]
             [DataType(DataType.Password)]
-            [Display(Name = "Current password")]
+            [Display(Name = "Текущий пароль")]
             public string OldPassword { get; set; }
-
-            [Required]
-            [StringLength(100, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 6)]
-            [DataType(DataType.Password)]
-            [Display(Name = "New password")]
-            public string NewPassword { get; set; }
-
-            [DataType(DataType.Password)]
-            [Display(Name = "Confirm new password")]
-            [Compare("NewPassword", ErrorMessage = "The new password and confirmation password do not match.")]
-            public string ConfirmPassword { get; set; }
         }
 
         public async Task<IActionResult> OnGetAsync()
@@ -81,21 +78,24 @@ namespace Glaz.Server.Areas.Identity.Pages.Account.Manage
                 return NotFound($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
             }
 
-            var changePasswordResult = await _userManager.ChangePasswordAsync(user, Input.OldPassword, Input.NewPassword);
-            if (!changePasswordResult.Succeeded)
+            if (await _userManager.CheckPasswordAsync(user, Input.OldPassword))
             {
-                foreach (var error in changePasswordResult.Errors)
-                {
-                    ModelState.AddModelError(string.Empty, error.Description);
-                }
-                return Page();
+                var code = await _userManager.GeneratePasswordResetTokenAsync(user);
+                code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
+                var callbackUrl = Url.Page(
+                    "/Account/Manage/ChangePasswordConfirmation",
+                    pageHandler: null,
+                    values: new { area = "Identity", code },
+                    protocol: Request.Scheme);
+
+                await _emailSender.SendEmailAsync(
+                    user.Email,
+                    "Change Password",
+                    $"Please change your password by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.");
+
+                return RedirectToPage("Index");
             }
-
-            await _signInManager.RefreshSignInAsync(user);
-            _logger.LogInformation("User changed their password successfully.");
-            StatusMessage = "Your password has been changed.";
-
-            return RedirectToPage();
+            return Page();
         }
     }
 }
