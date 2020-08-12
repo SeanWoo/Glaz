@@ -12,12 +12,16 @@ namespace Glaz.Server.Entities
 
         [Required]
         [MaxLength(256)]
+        [Display(Name = "Имя")]
         public string Label { get; set; }
 
+        [Display(Name = "Комментарий")]
         public string Comment { get; set; }
 
+        [Display(Name = "Комментарий модератора")]
         public string ModeratorComment { get; set; }
 
+        [Display(Name = "Статус")]
         public OrderState State { get; set; }
 
 

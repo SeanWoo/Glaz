@@ -1,0 +1,75 @@
+﻿@model IEnumerable<Glaz.Server.Models.ManageOrders.ModeratorOrder>
+
+@{
+    ViewData["Title"] = "Index";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h1>Manage Index</h1>
+
+<p>
+    <a asp-action="Create">Create New</a>
+</p>
+@if (Model.Any())
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>
+                    @Html.DisplayNameFor(model => model.Label)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.Comment)
+                </th>
+                <th>
+                    Target image
+                </th>
+                <th>
+                    Response file
+                </th>
+                <th>
+                    Moderator Comment
+                </th>
+                <th>
+                    State
+                </th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Label)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Comment)
+                </td>
+                <td>
+                    <img width="100" height="100" src="@item.TargetImagePath" />
+                </td>
+                <td>
+                    <a href="@item.ResponseFilePath">Скачать</a>
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.ModeratorComment)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.State)
+                </td>
+                <td>
+                    <a asp-action="WriteNote" asp-route-id="@item.Id">Оставить заметку</a> |
+                    <a asp-action="ChangeState" asp-route-id="@item.Id">Сменить статус заказа</a> |
+                    <a asp-action="UploadBundles" asp-route-id="@item.Id">Загрузить bundles</a>
+                    <a asp-action="ViewOrder" asp-route-id="@item.Id">Просмотр заказа</a>
+                </td>
+            </tr>
+        }
+        </tbody>
+    </table>
+}
+else
+{
+    <h2>Orders is missing</h2>
+}

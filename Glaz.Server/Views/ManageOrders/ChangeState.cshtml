@@ -1,0 +1,37 @@
+﻿@model Glaz.Server.Models.ManageOrders.ChangeStateModel 
+@{
+    ViewData["Title"] = "Измените статус";
+}
+
+<h1>Измените статус</h1>
+
+<div class="row">
+    <div class="col-md-4">
+        <form asp-action="ChangeState" enctype="multipart/form-data">
+            <input type="hidden" asp-for="Id" />
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div class="form-group">
+                <select asp-for="StringState">
+                    @foreach (var item in Enum.GetNames(typeof(Glaz.Server.Data.Enums.OrderState)).Select(x => Enum.Parse<Glaz.Server.Data.Enums.OrderState>(x)))
+                    {
+                        if (Model.State != item)
+                        {
+                            <option value="@item">@item.GetDisplayName()</option>
+                        }
+                        else
+                        {
+                            <option selected value="@item">@item.GetDisplayName()</option>
+                        }
+                    }
+                </select>
+            </div>
+            <div class="form-group">
+                <input type="submit" value="Сохранить" class="btn btn-primary" />
+            </div>
+        </form>
+    </div>
+</div>
+
+<div>
+    <a asp-action="Index">Назад к списку</a>
+</div>

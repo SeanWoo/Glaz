@@ -200,8 +200,7 @@ namespace Glaz.Server.Controllers
         // more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(Guid id, [Bind("Id,Label,Comment,ModeratorComment")]
-            Order order)
+        public async Task<IActionResult> Edit(Guid id, [Bind("Id,Label,Comment,ModeratorComment")]Order order)
         {
             if (id != order.Id)
             {
