@@ -1,14 +1,15 @@
-﻿@model IEnumerable<Glaz.Server.Models.Orders.ClientOrder>
+﻿@using Glaz.Server.Data.Enums
+@model IEnumerable<Glaz.Server.Models.Orders.ClientOrder>
 
 @{
-    ViewData["Title"] = "Index";
+    ViewData["Title"] = "Список ваших заказов";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<h1>Index</h1>
+<h1>@ViewData["Title"]</h1>
 
 <p>
-    <a asp-action="Create">Create New</a>
+    <a asp-action="Create">Добавить новый заказ</a>
 </p>
 @if (Model.Any())
 {
@@ -22,10 +23,10 @@
                 @Html.DisplayNameFor(model => model.Comment)
             </th>
             <th>
-                Target image
+                @Html.DisplayNameFor(model => model.TargetImagePath)
             </th>
             <th>
-                Response file
+                @Html.DisplayNameFor(model => model.ResponseFilePath)
             </th>
             <th></th>
         </tr>
@@ -41,15 +42,20 @@
                     @Html.DisplayFor(modelItem => item.Comment)
                 </td>
                 <td>
-                    <img width="100" height="100" src="@item.TargetImagePath"/>
+                    <a href="@item.TargetImagePath">
+                        <img width="100" height="100" src="@item.TargetImagePath" alt="Изображение картинки-цели"/>
+                    </a>
                 </td>
                 <td>
                     <a href="@item.ResponseFilePath">Скачать</a>
                 </td>
                 <td>
-                    <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
-                    <a asp-action="Details" asp-route-id="@item.Id">Details</a> |
-                    <a asp-action="Delete" asp-route-id="@item.Id">Delete</a>
+                    @if (item.StateValue != OrderState.Verifying)
+                    {
+                        <span><a asp-action="Edit" asp-route-id="@item.Id">Редактировать</a> |</span>
+                    }
+                    <a asp-action="Details" asp-route-id="@item.Id">Подробно</a> |
+                    <a asp-action="Delete" asp-route-id="@item.Id">Удалить</a>
                 </td>
             </tr>
         }
@@ -58,5 +64,5 @@
 }
 else
 {
-    <h2>Orders is missing</h2>
+    <h2>Ваш список заказов пуст. Что бы добавить заказ воспользуйтесь кнопкой выше.</h2>
 }

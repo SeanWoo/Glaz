@@ -1,43 +1,48 @@
-﻿@model Glaz.Server.Entities.Order
+﻿@model Glaz.Server.Models.Orders.EditOrder
 
 @{
-    ViewData["Title"] = "Edit";
+    ViewData["Title"] = "Редактирование заказа";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<h1>Edit</h1>
+<h1>@ViewData["Title"]</h1>
 
-<h4>Order</h4>
-<hr />
+<h4>Данные заказа</h4>
+<hr/>
 <div class="row">
     <div class="col-md-4">
-        <form asp-action="Edit">
+        <form asp-action="Edit" enctype="multipart/form-data">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <input type="hidden" asp-for="Id" />
+            <input type="hidden" asp-for="Id"/>
             <div class="form-group">
                 <label asp-for="Label" class="control-label"></label>
-                <input asp-for="Label" class="form-control" />
+                <input asp-for="Label" class="form-control"/>
                 <span asp-validation-for="Label" class="text-danger"></span>
             </div>
             <div class="form-group">
                 <label asp-for="Comment" class="control-label"></label>
-                <input asp-for="Comment" class="form-control" />
+                <input asp-for="Comment" class="form-control"/>
                 <span asp-validation-for="Comment" class="text-danger"></span>
             </div>
             <div class="form-group">
-                <label asp-for="ModeratorComment" class="control-label"></label>
-                <input asp-for="ModeratorComment" class="form-control" />
-                <span asp-validation-for="ModeratorComment" class="text-danger"></span>
+                <label asp-for="TargetImage" class="control-label"></label>
+                <input asp-for="TargetImage" class="form-control" type="file"/>
+                <span asp-validation-for="TargetImage" class="text-danger"></span>
             </div>
             <div class="form-group">
-                <input type="submit" value="Save" class="btn btn-primary" />
+                <label asp-for="ResponseFile" class="control-label"></label>
+                <input asp-for="ResponseFile" class="form-control" type="file"/>
+                <span asp-validation-for="ResponseFile" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <input type="submit" value="Save" class="btn btn-primary"/>
             </div>
         </form>
     </div>
 </div>
 
 <div>
-    <a asp-action="Index">Back to List</a>
+    <a asp-action="Index">Обратно к списку ваших заказов</a>
 </div>
 
 @section Scripts {

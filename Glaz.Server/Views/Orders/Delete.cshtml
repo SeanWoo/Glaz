@@ -1,40 +1,48 @@
-﻿@model Glaz.Server.Entities.Order
+﻿@model Glaz.Server.Models.Orders.DeleteOrder
 
 @{
-    ViewData["Title"] = "Delete";
+    ViewData["Title"] = "Удаление заказа";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<h1>Delete</h1>
+<h1>@ViewData["Title"]</h1>
 
-<h3>Are you sure you want to delete this?</h3>
+<h3>Вы точно желаете удалить заказ этот заказ?</h3>
 <div>
-    <h4>Order</h4>
-    <hr />
+    <h4>Подробности заказа</h4>
+    <hr/>
     <dl class="row">
-        <dt class = "col-sm-2">
+        <dt class="col-sm-2">
             @Html.DisplayNameFor(model => model.Label)
         </dt>
-        <dd class = "col-sm-10">
+        <dd class="col-sm-10">
             @Html.DisplayFor(model => model.Label)
         </dd>
-        <dt class = "col-sm-2">
+        <dt class="col-sm-2">
             @Html.DisplayNameFor(model => model.Comment)
         </dt>
-        <dd class = "col-sm-10">
+        <dd class="col-sm-10">
             @Html.DisplayFor(model => model.Comment)
         </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.ModeratorComment)
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.TargetImagePath)
         </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.ModeratorComment)
+        <dd class="col-sm-10">
+            <a href="@Model.TargetImagePath">
+                <img width="100" height="100" src="@Model.TargetImagePath" alt="Изображение картинки-цели"/>
+            </a>
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.ResponseFilePath)
+        </dt>
+        <dd class="col-sm-10">
+            <a href="@Model.ResponseFilePath">Скачать</a>
         </dd>
     </dl>
-    
+
     <form asp-action="Delete">
-        <input type="hidden" asp-for="Id" />
-        <input type="submit" value="Delete" class="btn btn-danger" /> |
-        <a asp-action="Index">Back to List</a>
+        <input type="hidden" asp-for="Id"/>
+        <input type="submit" value="Удалить" class="btn btn-danger"/> |
+        <a asp-action="Index">Обратно к списку ваших заказов</a>
     </form>
 </div>
