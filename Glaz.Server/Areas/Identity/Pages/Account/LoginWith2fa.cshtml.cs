@@ -1,7 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.Linq;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Glaz.Server.Entities;
@@ -13,6 +12,7 @@ using Microsoft.Extensions.Logging;
 namespace Glaz.Server.Areas.Identity.Pages.Account
 {
     [AllowAnonymous]
+    [SuppressMessage("ReSharper", "InconsistentNaming")]
     public class LoginWith2faModel : PageModel
     {
         private readonly SignInManager<GlazAccount> _signInManager;

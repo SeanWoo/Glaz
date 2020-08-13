@@ -37,7 +37,7 @@ namespace Glaz.Server.Models.Orders
             // Required by Controller
         }
         
-        public EditOrder(Order order, string rootDir)
+        public EditOrder(Order order)
         {
             Id = order.Id;
             Label = order.Label;

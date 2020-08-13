@@ -3,7 +3,6 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Security.Cryptography;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 using Glaz.Server.Data.AppSettings;
 using Glaz.Server.Data.Vuforia;
@@ -48,7 +47,7 @@ namespace Glaz.Server.Services
         private string GetStringToSign(HttpRequestMessage request)
         {
             string httpMethod = request.Method.Method.ToUpper();
-            string date = request.Headers.Date.Value.UtcDateTime.ToString("R");
+            string date = request.Headers.Date?.UtcDateTime.ToString("R");
             string requestPath = request.RequestUri.AbsolutePath;
 
             bool isRequestHasContentBody = request.Content != null;

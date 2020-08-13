@@ -201,7 +201,7 @@ namespace Glaz.Server.Controllers
                 return NotFound();
             }
             
-            return View(new EditOrder(order, _rootDirectory));
+            return View(new EditOrder(order));
         }
 
         // POST: Orders/Edit/5
