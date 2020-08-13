@@ -41,7 +41,7 @@ namespace Glaz.Server.Models.Orders
                 .First(a => a.Type == AttachmentType.Target)
                 .Path;
             ResponseFilePath = order.Attachments
-                .First(a => a.Type != AttachmentType.Target && a.Platform == AttachmentPlatform.None)
+                .First(a => a.Type != AttachmentType.Archive)
                 .Path;
             StateValue = order.State;
             State = order.State switch
@@ -49,8 +49,7 @@ namespace Glaz.Server.Models.Orders
                 OrderState.Deleted => "Удален",
                 OrderState.Banned => "Забанен",
                 OrderState.Verifying => "На проверке",
-                OrderState.Created => "Опубликован",
-                OrderState.Edited => "Отредактирован",
+                OrderState.Published => "Опубликован",
                 _ => throw new InvalidEnumArgumentException("Got unexpected Order.State during creating ClientOrder object")
             };
         }

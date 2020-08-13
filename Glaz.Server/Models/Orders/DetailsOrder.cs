@@ -5,7 +5,7 @@ using Glaz.Server.Entities;
 
 namespace Glaz.Server.Models.Orders
 {
-    public sealed class DetailsOrder : DeleteOrder
+    public class DetailsOrder : DeleteOrder
     {
         private const int TargetIsNotProcessedRating = -1;
         

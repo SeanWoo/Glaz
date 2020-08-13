@@ -8,9 +8,7 @@ namespace Glaz.Server.Data.Enums
         [Display(Name = "На проверке")]
         Verifying,
         [Display(Name = "Опубликован")]
-        Created,
-        [Display(Name = "На изменении")]
-        Edited,
+        Published,
         [Display(Name = "Забанен")]
         Banned,
         [Display(Name = "Удален")]

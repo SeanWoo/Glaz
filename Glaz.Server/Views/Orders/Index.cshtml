@@ -28,6 +28,9 @@
             <th>
                 @Html.DisplayNameFor(model => model.ResponseFilePath)
             </th>
+            <th>
+                @Html.DisplayNameFor(model => model.State)
+            </th>
             <th></th>
         </tr>
         </thead>
@@ -48,6 +51,9 @@
                 </td>
                 <td>
                     <a href="@item.ResponseFilePath">Скачать</a>
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.State)
                 </td>
                 <td>
                     @if (item.StateValue != OrderState.Verifying)

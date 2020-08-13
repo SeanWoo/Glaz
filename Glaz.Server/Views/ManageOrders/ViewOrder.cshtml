@@ -1,66 +1,53 @@
-﻿@model Glaz.Server.Entities.Order
+﻿@model Glaz.Server.Models.ManageOrders.DetailsModerOrder
 @{
     ViewData["Title"] = "ViewOrder";
 }
 
 <h1>Заказ</h1>
 
-<div class="row">
-    <div class="col-md-8">
-        <h3>@Html.DisplayNameFor(model => model.Label)</h3>
-        <h5> - @Model.Label</h5>
-        <h3>@Html.DisplayNameFor(model => model.Comment)</h3>
-        <h5> - @Model.Comment</h5>
-        <h3>@Html.DisplayNameFor(model => model.ModeratorComment)</h3>
-        <h5 - >@Model.ModeratorComment</h5>
-        <h3>@Html.DisplayNameFor(model => model.State)</h3>
-        <h5> - @Model.State.GetDisplayName()</h5>
-        <br />
-        <h5>Вложения</h5>
-
-        @if (Model.Attachments != null && Model.Attachments.Any())
-        {
-    <table>
-        <thead>
-            <tr>
-                <th>
-                    Дата создания
-                </th>
-                <th>
-                    Пометка
-                </th>
-                <th>
-                    Тип
-                </th>
-                <th>
-                    Платформа
-                </th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var item in Model.Attachments)
+<div>
+    <h4>Заказ № @Model.Id</h4>
+    <hr/>
+    <dl class="row">
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.Label)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.Label)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.Comment)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.Comment)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.TargetImagePath)
+        </dt>
+        <dd class="col-sm-10">
+            <a href="@Model.TargetImagePath">
+                <img width="100" height="100" src="@Model.TargetImagePath" alt="Изображение картинки-цели"/>
+            </a>
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.TrackingRate)
+        </dt>
+        <dd class="col-sm-10">
+            @if (Model.TrackingRate < 0)
             {
-            <tr>
-                <td>
-                    @item.CreatedAt.ToString()
-                </td>
-                <td>
-                    @item.Label
-                </td>
-                <td>
-                    @item.Type
-                </td>
-                <td>
-                    @item.Platform
-                </td>
-            </tr>
+                <span>Картинка ещё не была обработана</span>
             }
-        </tbody>
-    </table>
-        }
-        else
-        {
-            <h5>Вложения отсутсвуют</h5>
-        }
-    </div>
+            else
+            {
+                var stars = new string('★', Model.TrackingRate);
+                <span class="text-warning">@stars (@Model.TrackingRate★/5★)</span>
+            }
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.ResponseFilePath)
+        </dt>
+        <dd class="col-sm-10">
+            <a href="@Model.ResponseFilePath">Скачать</a>
+        </dd>
+    </dl>
 </div>

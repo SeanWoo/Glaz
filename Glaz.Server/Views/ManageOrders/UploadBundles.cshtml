@@ -1,0 +1,32 @@
+﻿@model Glaz.Server.Models.ManageOrders.OrderBundles
+@{
+    ViewData["Title"] = "Загрузка сборок приложения";
+}
+
+<h1>@ViewData["Title"]</h1>
+
+<div class="row">
+    <div class="col-md-4">
+        <form asp-action="UpdateBundles" enctype="multipart/form-data">
+            <input type="hidden" asp-for="OrderId"/>
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div class="form-group">
+                <label asp-for="AndroidBundle" class="control-label"></label>
+                <input asp-for="AndroidBundle" class="form-control" type="file"/>
+                <span asp-validation-for="AndroidBundle" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="IosBundle" class="control-label"></label>
+                <input asp-for="IosBundle" class="form-control" type="file"/>
+                <span asp-validation-for="IosBundle" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <input type="submit" value="Сохранить" class="btn btn-primary"/>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div>
+    <a asp-action="Index">Назад к списку</a>
+</div>

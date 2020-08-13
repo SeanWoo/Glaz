@@ -4,8 +4,7 @@
     {
         None,
         Video,
-        Model,
-        UI,
+        Bundle,
         Target,
         Archive
     }
