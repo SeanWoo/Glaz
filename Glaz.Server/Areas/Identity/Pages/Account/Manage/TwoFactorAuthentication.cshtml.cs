@@ -1,31 +1,24 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using Glaz.Server.Entities;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.Extensions.Logging;
 
 namespace Glaz.Server.Areas.Identity.Pages.Account.Manage
 {
     public class TwoFactorAuthenticationModel : PageModel
     {
-        private const string AuthenicatorUriFormat = "otpauth://totp/{0}:{1}?secret={2}&issuer={0}";
+        //public static string AuthenicatorUriFormat { get; } = "otpauth://totp/{0}:{1}?secret={2}&issuer={0}";
 
         private readonly UserManager<GlazAccount> _userManager;
         private readonly SignInManager<GlazAccount> _signInManager;
-        private readonly ILogger<TwoFactorAuthenticationModel> _logger;
 
         public TwoFactorAuthenticationModel(
             UserManager<GlazAccount> userManager,
-            SignInManager<GlazAccount> signInManager,
-            ILogger<TwoFactorAuthenticationModel> logger)
+            SignInManager<GlazAccount> signInManager)
         {
             _userManager = userManager;
             _signInManager = signInManager;
-            _logger = logger;
         }
 
         public bool HasAuthenticator { get; set; }
@@ -33,7 +26,7 @@ namespace Glaz.Server.Areas.Identity.Pages.Account.Manage
         public int RecoveryCodesLeft { get; set; }
 
         [BindProperty]
-        public bool Is2faEnabled { get; set; }
+        public bool Is2FaEnabled { get; set; }
 
         public bool IsMachineRemembered { get; set; }
 
@@ -49,7 +42,7 @@ namespace Glaz.Server.Areas.Identity.Pages.Account.Manage
             }
 
             HasAuthenticator = await _userManager.GetAuthenticatorKeyAsync(user) != null;
-            Is2faEnabled = await _userManager.GetTwoFactorEnabledAsync(user);
+            Is2FaEnabled = await _userManager.GetTwoFactorEnabledAsync(user);
             IsMachineRemembered = await _signInManager.IsTwoFactorClientRememberedAsync(user);
             RecoveryCodesLeft = await _userManager.CountRecoveryCodesAsync(user);
 

@@ -1,4 +1,5 @@
-﻿@model Glaz.Server.Models.ManageOrders.ChangeStateModel 
+﻿@using Glaz.Server.Data.Helpers
+@model Glaz.Server.Models.ManageOrders.ChangeStateModel 
 @{
     ViewData["Title"] = "Измените статус";
 }
@@ -7,7 +8,7 @@
 
 <div class="row">
     <div class="col-md-4">
-        <form asp-action="SaveState"/>
+        <form asp-action="SaveState">
             <input type="hidden" asp-for="Id" />
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <div class="form-group">
@@ -28,7 +29,7 @@
             <div class="form-group">
                 <input type="submit" value="Сохранить" class="btn btn-primary" />
             </div>
-        
+        </form>
     </div>
 </div>
 

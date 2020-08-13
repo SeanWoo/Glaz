@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.Linq;
+﻿using System.ComponentModel.DataAnnotations;
 using System.Text;
 using System.Text.Encodings.Web;
 using System.Threading.Tasks;
@@ -11,26 +8,19 @@ using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.WebUtilities;
-using Microsoft.Extensions.Logging;
 
 namespace Glaz.Server.Areas.Identity.Pages.Account.Manage
 {
     public class ChangePasswordModel : PageModel
     {
         private readonly UserManager<GlazAccount> _userManager;
-        private readonly SignInManager<GlazAccount> _signInManager;
-        private readonly ILogger<ChangePasswordModel> _logger;
         private readonly IEmailSender _emailSender;
 
         public ChangePasswordModel(
             UserManager<GlazAccount> userManager,
-            SignInManager<GlazAccount> signInManager,
-            ILogger<ChangePasswordModel> logger,
             IEmailSender emailSender)
         {
             _userManager = userManager;
-            _signInManager = signInManager;
-            _logger = logger;
             _emailSender = emailSender;
         }
 

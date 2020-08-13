@@ -3,14 +3,17 @@ using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Reflection;
 
-public static class EnumExtensions
+namespace Glaz.Server.Data.Helpers
 {
-    public static string GetDisplayName(this Enum enumValue)
+    public static class EnumExtensions
     {
-        return enumValue.GetType()
-                        .GetMember(enumValue.ToString())
-                        .First()
-                        .GetCustomAttribute<DisplayAttribute>()
-                        .GetName();
+        public static string GetDisplayName(this Enum enumValue)
+        {
+            return enumValue.GetType()
+                .GetMember(enumValue.ToString())
+                .First()
+                .GetCustomAttribute<DisplayAttribute>()
+                ?.GetName();
+        }
     }
 }

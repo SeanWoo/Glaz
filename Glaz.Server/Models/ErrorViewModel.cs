@@ -1,5 +1,3 @@
-using System;
-
 namespace Glaz.Server.Models
 {
     public class ErrorViewModel

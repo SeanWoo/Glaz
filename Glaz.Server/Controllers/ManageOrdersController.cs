@@ -199,10 +199,10 @@ namespace Glaz.Server.Controllers
             if (bundles.IosBundle != null)
             {
                 var attachment = order.Attachments
-                    .FirstOrDefault(a => a.Platform == AttachmentPlatform.IOS);
+                    .FirstOrDefault(a => a.Platform == AttachmentPlatform.Ios);
                 if (attachment is null)
                 {
-                    await CreateBundle(bundles.IosBundle, AttachmentPlatform.IOS, order.Id);
+                    await CreateBundle(bundles.IosBundle, AttachmentPlatform.Ios, order.Id);
                 }
                 else
                 {
