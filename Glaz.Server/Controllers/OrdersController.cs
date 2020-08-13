@@ -5,8 +5,10 @@ using System.Linq;
 using System.Threading.Tasks;
 using Glaz.Server.Data;
 using Glaz.Server.Data.Enums;
+using Glaz.Server.Data.Vuforia.Responses;
 using Glaz.Server.Entities;
 using Glaz.Server.Models.Orders;
+using Glaz.Server.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -22,18 +24,19 @@ namespace Glaz.Server.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly UserManager<GlazAccount> _userManager;
-        
+        private readonly IVuforiaService _vuforiaService;
         private readonly string _rootDirectory;
         private readonly string _targetsDirectory;
         private readonly string _responseFilesDirectory;
 
         public OrdersController(ApplicationDbContext context,
             UserManager<GlazAccount> userManager,
+            IVuforiaService vuforiaService,
             IWebHostEnvironment webHostEnvironment)
         {
             _context = context;
             _userManager = userManager;
-
+            _vuforiaService = vuforiaService;
             _rootDirectory = webHostEnvironment.WebRootPath;
             const string attachmentsDirectory = "Attachments";
             _targetsDirectory = Path.Combine(attachmentsDirectory, "Targets");
@@ -74,7 +77,23 @@ namespace Glaz.Server.Controllers
                 return NotFound();
             }
 
+            var targetAttachemnt = GetTargetAttachment(order);
+            if (targetAttachemnt.VuforiaDetails.TargetVersion == -1)
+            {
+                var details = await _vuforiaService.GetTargetRecord(targetAttachemnt.VuforiaDetails.TargetId);
+                await SaveTargetRating(targetAttachemnt.VuforiaDetails, details);
+            }
             return View(new DetailsOrder(order));
+        }
+        private async Task SaveTargetRating(VuforiaDetails details, TargetRecord record)
+        {
+            details.Rating = record.TrackingRating < 0 ? (byte)0 : (byte)record.TrackingRating;
+            if (record.TrackingRating >= 0)
+            {
+                details.TargetVersion++;
+            }
+            _context.VuforiaDetails.Update(details);
+            await _context.SaveChangesAsync();
         }
 
         // GET: Orders/Create
@@ -138,9 +157,8 @@ namespace Glaz.Server.Controllers
                     ".zip" => AttachmentType.Archive,
                     ".rar" => AttachmentType.Archive,
                     ".7z" => AttachmentType.Archive,
+                    ".tag.gz" => AttachmentType.Archive,
                     ".mp4" => AttachmentType.Video,
-                    ".json" => AttachmentType.Model,
-                    ".txt" => AttachmentType.UI,
                     _ => AttachmentType.None
                 };
                 newAttachment.Label = $"client_{newAttachment.Id}";
@@ -248,12 +266,18 @@ namespace Glaz.Server.Controllers
         private async Task UpdateTargetAttachment(Guid orderId, Attachment newTarget)
         {
             var target = await _context.Attachments
+                .Include(a => a.VuforiaDetails)
                 .FirstAsync(a => a.OrderId == orderId && a.Type == AttachmentType.Target);
             target.Label = newTarget.Label;
             target.CreatedAt = DateTime.Now;
             target.Path = newTarget.Path;
+
+            if (target.VuforiaDetails != null)
+            {
+                target.VuforiaDetails.TargetVersion = -1;
+            }
+            
             _context.Attachments.Update(target);
-            // await _context.SaveChangesAsync();
         }
         private async Task UpdateResponseAttachment(Guid orderId, Attachment newResponse)
         {
@@ -263,7 +287,6 @@ namespace Glaz.Server.Controllers
             response.CreatedAt = DateTime.Now;
             response.Path = newResponse.Path;
             _context.Attachments.Update(response);
-            // await _context.SaveChangesAsync();
         }
 
         // GET: Orders/Delete/5
@@ -301,6 +324,12 @@ namespace Glaz.Server.Controllers
         private bool OrderExists(Guid id)
         {
             return _context.Orders.Any(e => e.Id == id);
+        }
+        
+        private Attachment GetTargetAttachment(Order order)
+        {
+            return order.Attachments
+                .First(a => a.Type == AttachmentType.Target);
         }
     }
 }
