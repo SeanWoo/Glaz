@@ -25,8 +25,8 @@ namespace Glaz.Server.Controllers.Api
             _rootDirectory = env.WebRootPath;
         }
         
-        [HttpGet("/api/[controller]/{id}/{platform}")]
-        public async Task<IActionResult> Index(string targetId, string platform)
+        [HttpGet("/api/[controller]/id/{id}/{platform}")]
+        public async Task<IActionResult> GetByTargetId(string targetId, string platform)
         {
             var isParsed = Enum.TryParse(platform, true, out AttachmentPlatform enumPlatform);
 
@@ -37,6 +37,7 @@ namespace Glaz.Server.Controllers.Api
             }
 
             var orderId = await _context.Attachments
+                .AsNoTracking()
                 .Include(a => a.VuforiaDetails)
                 .Where(a => a.VuforiaDetails.TargetId == targetId)
                 .Select(a => a.OrderId)
@@ -48,7 +49,43 @@ namespace Glaz.Server.Controllers.Api
             }
 
             var attachment = await _context.Attachments
-                .Include(a => a.VuforiaDetails)
+                .AsNoTracking()
+                .FirstOrDefaultAsync(a => a.OrderId == orderId && a.Platform == enumPlatform);
+
+            if (attachment is null)
+            {
+                return NotFound("Bundle for this platform is missing");
+            }
+                
+            var path = Path.Combine(_rootDirectory, attachment.Path);
+            var fileBytes = await System.IO.File.ReadAllBytesAsync(path);
+            return File(fileBytes, "application/octet-stream");
+        }
+        
+        [HttpGet("/api/[controller]/name/{targetName}/{platform}")]
+        public async Task<IActionResult> GetByTargetName(string targetName, string platform)
+        {
+            var isParsed = Enum.TryParse(platform, true, out AttachmentPlatform enumPlatform);
+
+            if (!isParsed)
+            {
+                var availablePlatforms = string.Join(", ", Enum.GetNames(typeof(AttachmentPlatform)));
+                return BadRequest($"Unknown platform. Available only: {availablePlatforms}");
+            }
+
+            var orderId = await _context.Attachments
+                .AsNoTracking()
+                .Where(a => a.Label == targetName)
+                .Select(a => a.OrderId)
+                .FirstOrDefaultAsync();
+
+            if (orderId == default)
+            {
+                return NotFound("Order with such targetName is missing");
+            }
+
+            var attachment = await _context.Attachments
+                .AsNoTracking()
                 .FirstOrDefaultAsync(a => a.OrderId == orderId && a.Platform == enumPlatform);
 
             if (attachment is null)
