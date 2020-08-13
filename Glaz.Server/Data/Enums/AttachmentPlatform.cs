@@ -4,6 +4,6 @@
     {
         None,
         Android,
-        IOS
+        Ios
     }
 }
