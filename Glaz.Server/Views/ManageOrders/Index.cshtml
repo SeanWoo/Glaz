@@ -41,7 +41,9 @@
                     @Html.DisplayFor(modelItem => item.Label)
                 </td>
                 <td>
-                    <img width="100" height="100" src="@item.TargetImagePath" alt="Изображение картинки-цели"/>
+                    <a href="@item.TargetImagePath">
+                        <img width="100" height="100" src="@item.TargetImagePath" alt="Изображение картинки-цели"/>
+                    </a>
                 </td>
                 <td>
                     <a href="@item.ResponseFilePath">Скачать</a>
