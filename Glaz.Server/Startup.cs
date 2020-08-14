@@ -116,13 +116,15 @@ namespace Glaz.Server
         {
             var rootDirectory = env.WebRootPath;
             const string attachmentsDirectory = "Attachments";
+            const string videosDirectory = "Videos";
             var targetsDirectory = Path.Combine(attachmentsDirectory, "Targets");
             var responseFilesDirectory = Path.Combine(attachmentsDirectory, "ResponseFiles");
             var bundlesDirectory = Path.Combine(attachmentsDirectory, "Bundles");
             CreateDirectories(
                 Path.Combine(rootDirectory, targetsDirectory),
                 Path.Combine(rootDirectory, responseFilesDirectory),
-                Path.Combine(rootDirectory, bundlesDirectory));
+                Path.Combine(rootDirectory, bundlesDirectory),
+                Path.Combine(rootDirectory, videosDirectory));
         }
         private void CreateDirectories(params string[] paths)
         {
