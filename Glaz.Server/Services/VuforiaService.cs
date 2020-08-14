@@ -103,7 +103,7 @@ namespace Glaz.Server.Services
             }
             else
             {
-                _logger.LogError($"Can't create target: Code: {response.StatusCode} JSON:\n{responseJson}");
+                _logger.LogError($"Can't create target:\nCode: {response.StatusCode}\nResponse JSON:\n{responseJson}\nRequestJson{json}");
             }
 
             return result.TargetId;
