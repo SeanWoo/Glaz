@@ -8,7 +8,7 @@ namespace Glaz.Server.Controllers.Api
     [ApiController]
     public class StreamController : ControllerBase
     {
-        private IWebHostEnvironment _webHostEnvironment;
+        private readonly IWebHostEnvironment _webHostEnvironment;
         public StreamController(IWebHostEnvironment webHostEnvironment)
         {
             _webHostEnvironment = webHostEnvironment;
@@ -16,7 +16,7 @@ namespace Glaz.Server.Controllers.Api
         [Route("")]
         public FileResult GetVideoStream(string nameFile)
         {
-            return PhysicalFile(Path.Combine(_webHostEnvironment.ContentRootPath, $"Videos/{nameFile}.MP4"), "application/octet-stream", true);
+            return PhysicalFile(Path.Combine(_webHostEnvironment.WebRootPath, $"Videos/{nameFile}.mp4"), "application/octet-stream", true);
         }
     }
 }
