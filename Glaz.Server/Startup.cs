@@ -134,7 +134,7 @@ namespace Glaz.Server
             });
             RecurringJob.AddOrUpdate<DatabaseCleaner>("delete-orders",
                 cleaner => cleaner.RemoveMarkedOrderEntities(),
-                Cron.Daily(1, 30));
+                Cron.Daily(1));
 
             app.UseEndpoints(endpoints =>
             {
