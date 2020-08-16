@@ -116,6 +116,11 @@ namespace Glaz.Server.Controllers
                 string targetId = await UploadVuforiaTarget(targetAttachment);
                 await SaveTargetId(targetAttachment.Id, targetId);
             }
+            else if (model.State == OrderState.Deleted)
+            {
+                await DeleteVuforiaTargetIfExists(GetTargetAttachment(order));
+                MarkOrderEntitesAsHasToDelete(order);
+            }
             
             order.State = model.State;
             _context.Update(order);
@@ -153,6 +158,27 @@ namespace Glaz.Server.Controllers
             dbAttachment.VuforiaDetails = newDetails;
             _context.Attachments.Update(dbAttachment);
             await _context.SaveChangesAsync();
+        }
+        private void MarkOrderEntitesAsHasToDelete(Order order)
+        {
+            order.State = OrderState.Deleted;
+            order.HastToDelete = true;
+
+            foreach (var orderAttachment in order.Attachments)
+            {
+                orderAttachment.HastToDelete = true;
+                if (orderAttachment.VuforiaDetails != null)
+                {
+                    orderAttachment.VuforiaDetails.HasToDelete = true;
+                }
+            }
+        }
+        private async Task DeleteVuforiaTargetIfExists(Attachment target)
+        {
+            if (target?.VuforiaDetails != null)
+            {
+                await _vuforiaService.DeleteTarget(target.VuforiaDetails.TargetId);
+            }
         }
 
         [HttpGet("{id}")]
