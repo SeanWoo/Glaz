@@ -1,4 +1,5 @@
 using System;
+using System.Data;
 using System.IO;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Identity;
@@ -8,6 +9,8 @@ using Glaz.Server.Data;
 using Glaz.Server.Data.AppSettings;
 using Glaz.Server.Entities;
 using Glaz.Server.Services;
+using Hangfire;
+using Hangfire.MySql.Core;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity.UI.Services;
@@ -57,7 +60,26 @@ namespace Glaz.Server
                 options.ReturnUrlParameter = CookieAuthenticationDefaults.ReturnUrlParameter;
                 options.SlidingExpiration = true;
             });
-
+            
+            services.AddHangfire(configuration => configuration
+                .SetDataCompatibilityLevel(CompatibilityLevel.Version_170)
+                .UseSimpleAssemblyNameTypeSerializer()
+                .UseRecommendedSerializerSettings()
+                .UseStorage(new MySqlStorage(
+                    Configuration.GetConnectionString("HangfireConnection"),
+                    new MySqlStorageOptions
+                    {
+                        TransactionIsolationLevel = IsolationLevel.ReadCommitted,
+                        QueuePollInterval = TimeSpan.FromSeconds(15),
+                        JobExpirationCheckInterval = TimeSpan.FromHours(1),
+                        CountersAggregateInterval = TimeSpan.FromMinutes(5),
+                        PrepareSchemaIfNecessary = true,
+                        DashboardJobListLimit = 50000,
+                        TransactionTimeout = TimeSpan.FromMinutes(1),
+                        TablePrefix = "Hangfire"
+                    })));
+            services.AddHangfireServer();
+            
             services.AddLogging();
             services.AddControllersWithViews();
             services.AddRazorPages();
@@ -72,7 +94,7 @@ namespace Glaz.Server
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env,
-            ApplicationDbContext context,
+            ApplicationDbContext context, IBackgroundJobClient backgroundJobs,
             UserManager<GlazAccount> userManager, RoleManager<IdentityRole> roleManager)
         {
             context.Database.Migrate();
@@ -96,7 +118,6 @@ namespace Glaz.Server
             }
             app.UseHttpsRedirection();
             app.UseStaticFiles();
-
             app.UseRouting();
             
             app.UseForwardedHeaders(new ForwardedHeadersOptions
@@ -106,6 +127,14 @@ namespace Glaz.Server
 
             app.UseAuthentication();
             app.UseAuthorization();
+            
+            app.UseHangfireDashboard("/hangfire", new DashboardOptions
+            {
+                IsReadOnlyFunc = _ => true
+            });
+            RecurringJob.AddOrUpdate<DatabaseCleaner>("delete-orders",
+                cleaner => cleaner.RemoveMarkedOrderEntities(),
+                Cron.Daily(1, 30));
 
             app.UseEndpoints(endpoints =>
             {
@@ -113,6 +142,7 @@ namespace Glaz.Server
                     name: "default",
                     pattern: "{controller=Home}/{action=Index}/{id?}");
                 endpoints.MapRazorPages();
+                endpoints.MapHangfireDashboard();
             });
         }
         private void CreateServerDirectoriesIfNotExist(IWebHostEnvironment env)
