@@ -367,3 +367,4 @@ MigrationBackup/
 
 # Server uploads
 /Glaz.Server/wwwroot/Attachments/
+/Glaz.Server/wwwroot/Videos/

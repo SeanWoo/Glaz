@@ -314,11 +314,41 @@ namespace Glaz.Server.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(Guid id)
         {
-            var order = await _context.Orders.FindAsync(id);
-            order.State = OrderState.Deleted;
-            _context.Orders.Update(order);
-            await _context.SaveChangesAsync();
+            var order = await _context.Orders
+                .Include(o => o.Attachments)
+                    .ThenInclude(a => a.VuforiaDetails)
+                .FirstOrDefaultAsync(o => o.Id == id);
+            await MarkOrderEntitesAsHasToDelete(order);
+            
+            var target = order.Attachments
+                .FirstOrDefault(a => a.Type == AttachmentType.Target);
+            await DeleteVuforiaTargetIfExists(target);
+            
             return RedirectToAction(nameof(Index));
+        }
+        private async Task MarkOrderEntitesAsHasToDelete(Order order)
+        {
+            order.State = OrderState.Deleted;
+            order.HastToDelete = true;
+
+            foreach (var orderAttachment in order.Attachments)
+            {
+                orderAttachment.HastToDelete = true;
+                if (orderAttachment.VuforiaDetails != null)
+                {
+                    orderAttachment.VuforiaDetails.HasToDelete = true;
+                }
+            }
+            
+            _context.Update(order);
+            await _context.SaveChangesAsync();
+        }
+        private async Task DeleteVuforiaTargetIfExists(Attachment target)
+        {
+            if (target?.VuforiaDetails != null)
+            {
+                await _vuforiaService.DeleteTarget(target.VuforiaDetails.TargetId);
+            }
         }
 
         private bool OrderExists(Guid id)

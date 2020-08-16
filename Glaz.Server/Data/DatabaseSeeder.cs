@@ -4,12 +4,12 @@ using Microsoft.AspNetCore.Identity;
 
 namespace Glaz.Server.Data
 {
-    public sealed class DatabaseInitializer
+    public sealed class DatabaseSeeder
     {
         private readonly RoleManager<IdentityRole> _roleManager;
         private readonly UserManager<GlazAccount> _userManager;
         
-        public DatabaseInitializer(RoleManager<IdentityRole> roleManager, UserManager<GlazAccount> userManager)
+        public DatabaseSeeder(RoleManager<IdentityRole> roleManager, UserManager<GlazAccount> userManager)
         {
             _roleManager = roleManager;
             _userManager = userManager;

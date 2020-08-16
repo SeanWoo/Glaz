@@ -24,6 +24,8 @@ namespace Glaz.Server.Entities
         [Required]
         public DateTime CreatedAt { get; set; }
 
+        public bool HastToDelete { get; set; }
+
         public GlazAccount Account { get; set; }
 
         public Guid OrderId { get; set; }
