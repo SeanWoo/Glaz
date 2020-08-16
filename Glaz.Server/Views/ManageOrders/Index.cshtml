@@ -1,4 +1,5 @@
-﻿@model IEnumerable<Glaz.Server.Models.ManageOrders.ModeratorOrder>
+﻿@using Glaz.Server.Data.Enums
+@model IEnumerable<Glaz.Server.Models.ManageOrders.ModeratorOrder>
 
 @{
     ViewData["Title"] = "Модерация заказов";
@@ -7,9 +8,12 @@
 
 <h1>@ViewData["Title"]</h1>
 
+<input type="checkbox" id="checkHideHasToDeleteOrders">
+<label for="checkHideHasToDeleteOrders" onc>Скрыть заказы помеченные на удаление?</label>
+
 @if (Model.Any())
 {
-    <table class="table">
+    <table id="orders" class="table">
         <thead>
         <tr>
             <th>
@@ -36,7 +40,7 @@
         <tbody>
         @foreach (var item in Model)
         {
-            <tr>
+            <tr data-has-to-delete="@(item.StateValue == OrderState.Deleted)">
                 <td>
                     @Html.DisplayFor(modelItem => item.Label)
                 </td>
@@ -91,4 +95,19 @@
 else
 {
     <h2>Новые заказы для модерации отсуствуют</h2>
+}
+
+@section Scripts {
+    <script>
+    $(document).ready(function() {
+        $('#checkHideHasToDeleteOrders').change(function() {
+          let rows = $('tr[data-has-to-delete="True"]');
+          if (this.checked) {
+            rows.hide();
+          } else {
+            rows.show();
+          }
+        });
+    }); 
+    </script>
 }

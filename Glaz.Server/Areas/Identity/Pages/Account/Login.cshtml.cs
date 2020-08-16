@@ -44,10 +44,12 @@ namespace Glaz.Server.Areas.Identity.Pages.Account
             [Required(ErrorMessage = "Поле 'Имя пользователя' не может быть пустым.")]
             [MinLength(3, ErrorMessage = "Минимальное кол-во символов - 3")]
             [LoginValidator]
+            [Display(Name = "Имя пользователя (или e-mail)")]
             public string Username { get; set; }
 
             [Required(ErrorMessage = "Поле 'Пароль' не может быть пустым.")]
             [DataType(DataType.Password)]
+            [Display(Name = "Пароль")]
             public string Password { get; set; }
 
             [Display(Name = "Запомнить меня?")]
