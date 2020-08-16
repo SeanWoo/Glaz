@@ -18,6 +18,8 @@ namespace Glaz.Server.Entities
 
         public bool IsBlocked { get; set; }
 
+        public bool HasToDelete { get; set; }
+
         public Guid AttachmentId { get; set; }
         public Attachment Attachment { get; set; }
 

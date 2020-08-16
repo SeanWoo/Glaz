@@ -23,7 +23,8 @@ namespace Glaz.Server.Entities
 
         [Display(Name = "Статус")]
         public OrderState State { get; set; }
-
+        
+        public bool HastToDelete { get; set; }
 
         #region RelationShips
 
