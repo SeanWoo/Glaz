@@ -50,7 +50,7 @@ namespace Glaz.Server.Controllers
                 .AsNoTracking()
                 .Include(o => o.Account)
                 .Include(o => o.Attachments)
-                    .ThenInclude(a => a.VuforiaDetails)
+                .ThenInclude(a => a.VuforiaDetails)
                 .Where(o => o.State != OrderState.Deleted && o.Account.UserName == User.Identity.Name)
                 .ToArrayAsync();
 
@@ -69,7 +69,7 @@ namespace Glaz.Server.Controllers
 
             var order = await _context.Orders
                 .Include(o => o.Attachments)
-                    .ThenInclude(a => a.VuforiaDetails)
+                .ThenInclude(a => a.VuforiaDetails)
                 .Include(o => o.Account)
                 .FirstOrDefaultAsync(m => m.Id == id);
             if (order == null)
@@ -78,20 +78,26 @@ namespace Glaz.Server.Controllers
             }
 
             var targetAttachemnt = GetTargetAttachment(order);
-            if (targetAttachemnt.VuforiaDetails.TargetVersion == -1)
+            if (targetAttachemnt.VuforiaDetails != null)
             {
-                var details = await _vuforiaService.GetTargetRecord(targetAttachemnt.VuforiaDetails.TargetId);
-                await SaveTargetRating(targetAttachemnt.VuforiaDetails, details);
+                if (targetAttachemnt.VuforiaDetails.TargetVersion == -1)
+                {
+                    var details = await _vuforiaService.GetTargetRecord(targetAttachemnt.VuforiaDetails.TargetId);
+                    await SaveTargetRating(targetAttachemnt.VuforiaDetails, details);
+                }
             }
+
             return View(new DetailsOrder(order));
         }
+
         private async Task SaveTargetRating(VuforiaDetails details, TargetRecord record)
         {
-            details.Rating = record.TrackingRating < 0 ? (byte)0 : (byte)record.TrackingRating;
+            details.Rating = record.TrackingRating < 0 ? (byte) 0 : (byte) record.TrackingRating;
             if (record.TrackingRating >= 0)
             {
                 details.TargetVersion++;
             }
+
             _context.VuforiaDetails.Update(details);
             await _context.SaveChangesAsync();
         }
@@ -117,6 +123,7 @@ namespace Glaz.Server.Controllers
             await CreateOrderAndSaveToDatabase(orderDto);
             return RedirectToAction(nameof(Index));
         }
+
         private async Task CreateOrderAndSaveToDatabase(CreateOrder orderDto)
         {
             var newOrder = new Order
@@ -133,6 +140,7 @@ namespace Glaz.Server.Controllers
             _context.Add(newOrder);
             await _context.SaveChangesAsync();
         }
+
         private async Task<Attachment> CreateAttachment(IFormFile file, bool isTarget = false)
         {
             var newAttachment = new Attachment
@@ -166,6 +174,7 @@ namespace Glaz.Server.Controllers
 
             return newAttachment;
         }
+
         private async Task<string> SaveTargetFile(IFormFile file, Guid id)
         {
             var extension = Path.GetExtension(file.FileName);
@@ -175,6 +184,7 @@ namespace Glaz.Server.Controllers
             await file.CopyToAsync(stream);
             return path;
         }
+
         private async Task<string> SaveResponseFile(IFormFile file, Guid id)
         {
             var extension = Path.GetExtension(file.FileName);
@@ -200,7 +210,7 @@ namespace Glaz.Server.Controllers
             {
                 return NotFound();
             }
-            
+
             return View(new EditOrder(order));
         }
 
@@ -240,8 +250,8 @@ namespace Glaz.Server.Controllers
             }
 
             return RedirectToAction(nameof(Index));
-
         }
+
         private async Task EditOrderAndSaveToDatabase(Order order, EditOrder orderDto)
         {
             order.Label = orderDto.Label;
@@ -260,9 +270,10 @@ namespace Glaz.Server.Controllers
                 var response = await CreateAttachment(orderDto.ResponseFile);
                 await UpdateResponseAttachment(order.Id, response);
             }
-            
+
             await _context.SaveChangesAsync();
         }
+
         private async Task UpdateTargetAttachment(Guid orderId, Attachment newTarget)
         {
             var target = await _context.Attachments
@@ -276,9 +287,10 @@ namespace Glaz.Server.Controllers
             {
                 target.VuforiaDetails.TargetVersion = -1;
             }
-            
+
             _context.Attachments.Update(target);
         }
+
         private async Task UpdateResponseAttachment(Guid orderId, Attachment newResponse)
         {
             var response = await _context.Attachments
@@ -316,16 +328,17 @@ namespace Glaz.Server.Controllers
         {
             var order = await _context.Orders
                 .Include(o => o.Attachments)
-                    .ThenInclude(a => a.VuforiaDetails)
+                .ThenInclude(a => a.VuforiaDetails)
                 .FirstOrDefaultAsync(o => o.Id == id);
             await MarkOrderEntitesAsHasToDelete(order);
-            
+
             var target = order.Attachments
                 .FirstOrDefault(a => a.Type == AttachmentType.Target);
             await DeleteVuforiaTargetIfExists(target);
-            
+
             return RedirectToAction(nameof(Index));
         }
+
         private async Task MarkOrderEntitesAsHasToDelete(Order order)
         {
             order.State = OrderState.Deleted;
@@ -339,10 +352,11 @@ namespace Glaz.Server.Controllers
                     orderAttachment.VuforiaDetails.HasToDelete = true;
                 }
             }
-            
+
             _context.Update(order);
             await _context.SaveChangesAsync();
         }
+
         private async Task DeleteVuforiaTargetIfExists(Attachment target)
         {
             if (target?.VuforiaDetails != null)
@@ -355,7 +369,7 @@ namespace Glaz.Server.Controllers
         {
             return _context.Orders.Any(e => e.Id == id);
         }
-        
+
         private Attachment GetTargetAttachment(Order order)
         {
             return order.Attachments
