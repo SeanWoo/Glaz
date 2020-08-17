@@ -285,10 +285,13 @@ namespace Glaz.Server.Controllers
             }
 
             var targetAttachemnt = GetTargetAttachment(order);
-            if (targetAttachemnt.VuforiaDetails.TargetVersion == -1)
+            if (targetAttachemnt.VuforiaDetails != null)
             {
-                var details = await _vuforiaService.GetTargetRecord(targetAttachemnt.VuforiaDetails.TargetId);
-                await SaveTargetRating(targetAttachemnt.VuforiaDetails, details);
+                if (targetAttachemnt.VuforiaDetails.TargetVersion == -1)
+                {
+                    var details = await _vuforiaService.GetTargetRecord(targetAttachemnt.VuforiaDetails.TargetId);
+                    await SaveTargetRating(targetAttachemnt.VuforiaDetails, details);
+                }
             }
 
             return View(new DetailsModerOrder(order));
