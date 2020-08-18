@@ -18,4 +18,12 @@
       <ProjectReference Include="..\Glaz.Server\Glaz.Server.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Content Include="wwwroot\Videos\test.mp4">
+        <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+        <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+    </ItemGroup>
+
 </Project>
