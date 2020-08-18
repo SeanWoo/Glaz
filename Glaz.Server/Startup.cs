@@ -9,6 +9,7 @@ using Glaz.Server.Data;
 using Glaz.Server.Data.AppSettings;
 using Glaz.Server.Entities;
 using Glaz.Server.Services;
+using Glaz.Server.Services.Helpers;
 using Hangfire;
 using Hangfire.MySql.Core;
 using Microsoft.AspNetCore.Authentication.Cookies;
@@ -88,6 +89,7 @@ namespace Glaz.Server
             services.Configure<EmailSenderOptions>(Configuration.GetSection("EmailSender"));
             services.Configure<VuforiaCredentials>(Configuration.GetSection("VuforiaCredentials"));
 
+            services.AddScoped<IVuforiaRequestsManager, VuforiaRequestsManager>();
             services.AddScoped<IVuforiaService, VuforiaService>();
             services.AddSingleton<IEmailSender, EmailSender>();
         }
