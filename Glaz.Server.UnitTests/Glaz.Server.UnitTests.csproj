@@ -7,6 +7,8 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <PackageReference Include="Microsoft.EntityFrameworkCore" Version="3.1.7" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="3.1.7" />
         <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.5.0" />
         <PackageReference Include="Moq" Version="4.14.5" />
         <PackageReference Include="xunit" Version="2.4.0" />
@@ -19,6 +21,11 @@
     </ItemGroup>
 
     <ItemGroup>
+      <Content Include="wwwroot\Attachments\Bundles\Android_Bundle.bin">
+        <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+        <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
       <Content Include="wwwroot\Videos\test.mp4">
         <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
         <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
