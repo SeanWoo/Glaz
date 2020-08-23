@@ -18,8 +18,7 @@ namespace Glaz.Server.Controllers.Api
         private readonly ApplicationDbContext _context;
         private readonly string _rootDirectory;
         
-        public BundlesController(ApplicationDbContext context,
-            IWebHostEnvironment env)
+        public BundlesController(ApplicationDbContext context, IWebHostEnvironment env)
         {
             _context = context;
             _rootDirectory = env.WebRootPath;

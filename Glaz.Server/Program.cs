@@ -17,6 +17,11 @@ namespace Glaz.Server
             Host.CreateDefaultBuilder(args)
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
+                    webBuilder.ConfigureKestrel(serverOptions =>
+                    {
+                        // Max 200 MB per request
+                        serverOptions.Limits.MaxRequestBodySize = 200 * 1024 * 1024;
+                    });
                     webBuilder.UseStartup<Startup>();
                 });
     }

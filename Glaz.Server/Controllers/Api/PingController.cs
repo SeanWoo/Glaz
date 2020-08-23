@@ -6,6 +6,6 @@ namespace Glaz.Server.Controllers.Api
     [ApiController]
     public class PingController : ControllerBase
     {
-        public IActionResult Ping() => Ok();
+        public IActionResult Index() => Ok();
     }
 }

@@ -8,16 +8,28 @@ namespace Glaz.Server.Controllers.Api
     [ApiController]
     public class StreamController : ControllerBase
     {
-        private readonly IWebHostEnvironment _webHostEnvironment;
+        private readonly string _rootDirectoryPath;
+        
         public StreamController(IWebHostEnvironment webHostEnvironment)
         {
-            _webHostEnvironment = webHostEnvironment;
+            _rootDirectoryPath = webHostEnvironment.WebRootPath;
         }
         
         [HttpGet("{filename}")]
-        public FileResult GetVideoStream(string filename)
+        public IActionResult GetVideoStream(string filename)
         {
-            return PhysicalFile(Path.Combine(_webHostEnvironment.WebRootPath, $"Videos/{filename}.mp4"), "application/octet-stream", true);
+            if (string.IsNullOrWhiteSpace(filename))
+            {
+                return BadRequest();
+            }
+
+            string videoFilePath = Path.Combine(_rootDirectoryPath, $"Videos/{filename}.mp4");
+            if (!System.IO.File.Exists(videoFilePath))
+            {
+                return BadRequest();
+            }
+            
+            return PhysicalFile(videoFilePath, "application/octet-stream", true);
         }
     }
 }

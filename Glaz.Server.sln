@@ -5,6 +5,8 @@ VisualStudioVersion = 16.0.30320.27
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Glaz.Server", "Glaz.Server\Glaz.Server.csproj", "{4490B52A-57FE-4882-B9FC-BAE68CBB3E12}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Glaz.Server.UnitTests", "Glaz.Server.UnitTests\Glaz.Server.UnitTests.csproj", "{2DDE0E47-96C2-41BF-827F-B83A5CDAA9DD}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +17,10 @@ Global
 		{4490B52A-57FE-4882-B9FC-BAE68CBB3E12}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4490B52A-57FE-4882-B9FC-BAE68CBB3E12}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4490B52A-57FE-4882-B9FC-BAE68CBB3E12}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2DDE0E47-96C2-41BF-827F-B83A5CDAA9DD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2DDE0E47-96C2-41BF-827F-B83A5CDAA9DD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2DDE0E47-96C2-41BF-827F-B83A5CDAA9DD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2DDE0E47-96C2-41BF-827F-B83A5CDAA9DD}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

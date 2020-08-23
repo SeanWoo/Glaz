@@ -110,6 +110,11 @@ namespace Glaz.Server.Controllers
                 return NotFound();
             }
 
+            if (order.State == model.State)
+            {
+                return RedirectToAction(nameof(Index));
+            }
+
             if (model.State == OrderState.Published)
             {
                 var targetAttachment = GetTargetAttachment(order);
@@ -269,7 +274,6 @@ namespace Glaz.Server.Controllers
             await SaveBundleFile(bundleFile, bundle.Path);
             _context.Attachments.Update(bundle);
         }
-        
         [HttpGet("{id}")]
         public async Task<IActionResult> ViewOrder(Guid id)
         {
