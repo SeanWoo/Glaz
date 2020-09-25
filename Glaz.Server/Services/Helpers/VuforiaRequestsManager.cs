@@ -12,14 +12,14 @@ namespace Glaz.Server.Services.Helpers
     public sealed class VuforiaRequestsManager : IVuforiaRequestsManager
     {
         private const string DefaultMd5HashOfEmptyString = "d41d8cd98f00b204e9800998ecf8427e";
-        
+
         private readonly VuforiaCredentials _credentials;
 
         public VuforiaRequestsManager(IOptions<VuforiaCredentials> credentials)
         {
             _credentials = credentials.Value;
         }
-        
+
         public HttpRequestMessage PrepareRequest(HttpMethod method, string url)
         {
             var request = CreateBaseRequest(method, url);
