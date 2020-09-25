@@ -45,7 +45,7 @@ namespace Glaz.Server.Services
             }
             
             string json = JsonConvert.SerializeObject(target, _camelCaseSerializerSettings);
-            var request = _manager.PrepareRequest(HttpMethod.Get, $"{BaseApiUrl}/targets", json);
+            var request = _manager.PrepareRequest(HttpMethod.Post, $"{BaseApiUrl}/targets", json);
 
             var response = await _httpClient.SendAsync(request);
             string responseJson = await response.Content.ReadAsStringAsync();
